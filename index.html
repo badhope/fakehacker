@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SYSTEM TERMINAL v5.0 [SECURE]</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --main-color: #00ff00;
+            --dim-color: #004400;
+            --alert-color: #ff0000;
+            --blue-color: #00ffff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--main-color);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 扫描线效果 */
+        #scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.4));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 2000;
+            opacity: 0.6;
+        }
+
+        /* 主容器 */
+        #terminal {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 初始引导屏 */
+        #boot-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            cursor: pointer;
+            flex-direction: column;
+        }
+        .boot-text { font-size: 16px; opacity: 0.7; margin-bottom: 20px; text-align: center; padding: 0 20px;}
+        .cursor-blink { animation: blink 1s infinite; font-size: 20px; color: var(--main-color); }
+        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+        /* 输出区域 */
+        #output {
+            flex-grow: 1;
+            overflow-y: auto;
+            font-size: 14px; /* 手机适配 */
+            line-height: 1.5;
+            scrollbar-width: none; /* Firefox */
+        }
+        #output::-webkit-scrollbar { display: none; } /* Chrome */
+
+        /* 输入行 */
+        #input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+            border-top: 1px solid var(--dim-color);
+            padding-top: 5px;
+        }
+        .prompt { margin-right: 10px; color: var(--main-color); font-weight: bold; white-space: nowrap; }
+        
+        /* 隐藏输入框 */
+        #hidden-input {
+            background: transparent;
+            border: none;
+            color: transparent;
+            caret-color: var(--main-color);
+            outline: none;
+            flex-grow: 1;
+            font-size: 16px; /* 防止手机自动缩放 */
+            letter-spacing: 2px;
+        }
+
+        /* 特效层 */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999;
+            display: none;
+            background: rgba(0,0,0,0.95);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        /* 图形画布 */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        /* 点击波纹 */
+        .ripple {
+            position: absolute;
+            border: 2px solid var(--main-color);
+            border-radius: 50%;
+            animation: ripple-anim 0.6s linear;
+            pointer-events: none;
+        }
+        @keyframes ripple-anim {
+            from { width: 0; height: 0; opacity: 1; }
+            to { width: 500px; height: 500px; opacity: 0; margin-left: -250px; margin-top: -250px; }
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 600px) {
+            #output { font-size: 12px; }
+            .prompt { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="scanlines"></div>
+
+    <!-- 初始启动屏 -->
+    <div id="boot-screen" onclick="startSystem()">
+        <div class="boot-text">SYSTEM READY [SECURE CONNECTION]</div>
+        <div class="boot-text" style="color: var(--blue-color);">CLICK ANYWHERE TO INITIALIZE</div>
+        <div class="cursor-blink">_</div>
+    </div>
+
+    <!-- 主终端 -->
+    <div id="terminal" style="display: none;">
+        <div id="output"></div>
+        <div id="input-line">
+            <span class="prompt">root@hack:~$</span>
+            <input type="text" id="hidden-input" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </div>
+    </div>
+
+    <!-- 特效层 (用于全屏特效，如图表、倒计时) -->
+    <div id="overlay"></div>
+    
+    <!-- 画布层 (用于代码雨、网络图) -->
+    <canvas id="graphic-canvas"></canvas>
+
+<script>
+    // --- 系统状态 ---
+    let isRunning = false;
+    let isPaused = false;
+    let logInterval;
+    const input = document.getElementById('hidden-input');
+    const output = document.getElementById('output');
+    const terminal = document.getElementById('terminal');
+    const bootScreen = document.getElementById('boot-screen');
+    const overlay = document.getElementById('overlay');
+    const canvas = document.getElementById('graphic-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // --- 代码库 ---
+    const codePool = [
+        "Initiating secure handshake...", "Scanning ports: 21, 22, 80, 443, 8080...",
+        "Response received: 200 OK", "Injecting SQL payload: ' OR 1=1 --",
+        "Mapping network topology...", "Accessing shadow database...",
+        "Kernel panic: not syncing", "Overwriting sector 0x004F...",
+        "Decrypting AES-256 key...", "Trace route complete: 14 hops",
+        "Bypassing 2FA authentication...", "Downloading memory dump...",
+        "Spoofing MAC address: 00:0a:95:9d:68:16", "Uploading trojan.sh...",
+        "Connecting to proxy server...", "Clearing log files...",
+        "CPU Overclocking enabled", "GPU temperature: 85C",
+        "Virtual machine detected.", "Escaping sandbox environment..."
+    ];
+
+    // --- 1. 启动系统 ---
+    function startSystem() {
+        bootScreen.style.display = 'none';
+        terminal.style.display = 'flex';
+        input.focus();
+        isRunning = true;
+        
+        // 启动日志生成器
+        logInterval = setInterval(generateLog, 80);
+        
+        // 显示欢迎信息
+        addLine("SYSTEM BOOT COMPLETE.", "#00ff00");
+        addLine("Type 'HELP' for secret commands (invisible).", "#00ffff");
+        addLine("------------------------------------------------", "#004400");
+    }
+
+    // --- 2. 核心逻辑：日志生成 ---
+    function generateLog() {
+        if (isPaused) return;
+        const text = codePool[Math.floor(Math.random() * codePool.length)];
+        const timestamp = new Date().toLocaleTimeString('en-US', {hour12: false});
+        
+        // 随机颜色
+        let color = "#00ff00"; // 默认绿
+        if (Math.random() > 0.8) color = "#ffffff"; // 偶尔白
+        if (text.includes("Error") || text.includes("panic")) color = "#ff3333"; // 错误红
+        
+        addLine(`[${timestamp}] ${text}`, color);
+        scrollToBottom();
+    }
+
+    function addLine(text, color = "#00ff00") {
+        const div = document.createElement('div');
+        div.style.color = color;
+        div.innerText = text;
+        output.appendChild(div);
+        
+        // 限制行数，防止卡顿
+        if (output.childNodes.length > 100) {
+            output.removeChild(output.childNodes[0]);
+        }
+    }
+
+    function scrollToBottom() {
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    // --- 3. 输入监听 (核心互动) ---
+    input.addEventListener('keydown', function(e) {
+        const key = e.key.toLowerCase();
+        
+        // 延迟清空输入，防止漏馅
+        setTimeout(() => input.value = '', 10);
+
+        if (!isRunning) return;
+
+        // 指令分发
+        switch(key) {
+            case ' ': // 空格：暂停/继续
+                e.preventDefault(); // 防止页面滚动
+                togglePause();
+                break;
+            case 'a': triggerAccess(); break;
+            case 'b': triggerDownload(); break;
+            case 'c': triggerAlert(); break;
+            case 'd': triggerMatrix(); break;
+            case 'e': triggerDestruct(); break;
+            case 'f': triggerNetworkMap(); break;
+            case 'g': triggerSystemDiag(); break;
+            case 'h': triggerCryptoMine(); break;
+            case 'escape': closeAllEffects(); break;
+            default: 
+                // 随便按键的随机反馈
+                if (Math.random() > 0.7) addLine(`Executing subprocess ${key.toUpperCase()}...`, "#ffff00");
+        }
+    });
+
+    // --- 4. 特效函数库 ---
+
+    // 空格：暂停
+    function togglePause() {
+        isPaused = !isPaused;
+        if (isPaused) {
+            addLine("SYSTEM PAUSED. ANALYZING DATA...", "#ffff00");
+            document.body.style.borderColor = "#ffff00";
+        } else {
+            addLine("RESUMING OPERATIONS.", "#00ff00");
+            document.body.style.borderColor = "transparent";
+        }
+    }
+
+    // A: 伪装破解
+    function triggerAccess() {
+        addLine("CRACKING PASSWORD: 0%", "#00ffff");
+        let p = 0;
+        const interval = setInterval(() => {
+            p += Math.floor(Math.random() * 15) + 5;
+            if (p >= 100) {
+                p = 100;
+                clearInterval(interval);
+                addLine("PASSWORD FOUND: ********", "#00ff00");
+                flashScreen("#00ff00");
+            } else {
+                output.lastChild.innerText = `CRACKING PASSWORD: ${p}%`;
+            }
+        }, 150);
+    }
+
+    // B: 下载
+    function triggerDownload() {
+        overlay.style.display = 'flex';
+        overlay.innerHTML = `
+            <div style="color:#00ffff; font-size:20px;">DOWNLOADING CLASSIFIED FILES</div>
+            <div style="width:80%; max-width:400px; background:#333; height:20px; margin-top:20px; border:1px solid #00ffff;">
+                <div id="dl-bar" style="width:0%; height:100%; background:#00ffff;"></div>
+            </div>
+            <div id="dl-text" style="margin-top:10px;">0 KB / 2048 KB</div>
+        `;
+        let w = 0;
+        const interval = setInterval(() => {
+            w += 5;
+            if (w > 100) w = 100;
+            document.getElementById('dl-bar').style.width = w + '%';
+            document.getElementById('dl-text').innerText = `${Math.floor(w * 20.48)} KB / 2048 KB`;
+            if (w === 100) {
+                clearInterval(interval);
+                setTimeout(() => { overlay.style.display = 'none'; addLine("Download Complete.", "#00ff00"); }, 1000);
+            }
+        }, 100);
+    }
+
+    // C: 警报
+    function triggerAlert() {
+        document.body.style.background = "#330000";
+        setTimeout(() => document.body.style.background = "#050505", 100);
+        addLine("!!! FIREWALL BREACH DETECTED !!!", "#ff0000");
+        addLine("TRACE INITIATED. LOCATION: UNKNOWN.", "#ff0000");
+        
+        // 随机弹窗
+        const randomPop = Math.random();
+        if(randomPop > 0.5) {
+            setTimeout(() => alert("WARNING: Your activity has been logged. Authorities have been notified."), 500);
+        }
+    }
+
+    // D: 代码雨
+    function triggerMatrix() {
+        canvas.style.display = 'block';
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const columns = Math.floor(canvas.width / 20);
+        const drops = Array(columns).fill(1);
+        const chars = "ABCDEF0123456789@#$%";
+        
+        const draw = () => {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#0F0';
+            ctx.font = '20px monospace';
+            
+            for(let i=0; i<drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i*20, drops[i]*20);
+                
+                if(drops[i]*20 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        };
+        
+        const matrixAnim = setInterval(draw, 33);
+        // 5秒后自动关闭
+        setTimeout(() => {
+            clearInterval(matrixAnim);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.style.display = 'none';
+        }, 5000);
+    }
+
+    // F: 网络地图
+    function triggerNetworkMap() {
+        canvas.style.display = 'block';
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const drawNetwork = () => {
+            ctx.fillStyle = "#050505";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 随机画点和线
+            for(let i=0; i<20; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, Math.PI*2);
+                ctx.fillStyle = "#00ffff";
+                ctx.fill();
+                
+                // 连线
+                if(i > 0) {
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                    ctx.strokeStyle = "rgba(0, 255, 255, 0.2)";
+                    ctx.stroke();
+                }
+                
+                ctx.fillText(`NODE_${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`, x+10, y);
+            }
+        };
+        
+        const netAnim = setInterval(drawNetwork, 500);
+        setTimeout(() => {
+            clearInterval(netAnim);
+            canvas.style.display = 'none';
+        }, 4000);
+    }
+
+    // G: 系统诊断
+    function triggerSystemDiag() {
+        overlay.style.display = 'flex';
+        overlay.style.flexDirection = 'row';
+        overlay.style.flexWrap = 'wrap';
+        overlay.innerHTML = `
+            <div style="width:45%; margin:2%; text-align:center;">
+                <div style="color:white;">CPU TEMP</div>
+                <div id="cpu-val" style="font-size:40px; color:#ff00ff;">85°C</div>
+            </div>
+            <div style="width:45%; margin:2%; text-align:center;">
+                <div style="color:white;">MEMORY</div>
+                <div id="mem-val" style="font-size:40px; color:#00ffff;">16GB</div>
+            </div>
+            <div style="width:100%; text-align:center; margin-top:20px; color:white;">RUNNING DIAGNOSTICS...</div>
+        `;
+        
+        const diagInt = setInterval(() => {
+            document.getElementById('cpu-val').innerText = (70 + Math.floor(Math.random()*30)) + "°C";
+            document.getElementById('mem-val').innerText = (Math.random()*32).toFixed(1) + "GB";
+        }, 200);
+        
+        setTimeout(() => {
+            clearInterval(diagInt);
+            overlay.style.display = 'none';
+            addLine("SYSTEM OPTIMIZED.", "#00ff00");
+        }, 3000);
+    }
+
+    // H: 挖矿
+    function triggerCryptoMine() {
+        addLine("STARTING CRYPTO MINER...", "#ffaa00");
+        const mineInt = setInterval(() => {
+            const hash = Array.from({length: 32}, () => "abcdef0123456789"[Math.floor(Math.random()*16)]).join('');
+            addLine(`BLOCK FOUND: ${hash}`, "#ffaa00");
+            scrollToBottom();
+        }, 100);
+        
+        setTimeout(() => {
+            clearInterval(mineInt);
+            addLine("MINING PAUSED. WALLET UPDATED.", "#ffaa00");
+        }, 3000);
+    }
+
+    // E: 自毁
+    function triggerDestruct() {
+        overlay.style.display = 'flex';
+        overlay.style.background = "black";
+        let count = 5;
+        overlay.innerHTML = `<div style="font-size:80px; color:red;">${count}</div><div style="color:white;">SYSTEM PURGE</div>`;
+        
+        const destInt = setInterval(() => {
+            count--;
+            if(count <= 0) {
+                clearInterval(destInt);
+                overlay.innerHTML = `<div style="font-size:40px; color:red;">SYSTEM WIPED</div>`;
+                // 重新加载页面以重置
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                overlay.querySelector('div').innerText = count;
+            }
+        }, 1000);
+    }
+
+    // 通用：闪屏
+    function flashScreen(color) {
+        const div = document.createElement('div');
+        div.style.cssText = `position:fixed; top:0; left:0; width:100%; height:100%; background:${color}; opacity:0.5; z-index:2001; pointer-events:none;`;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 100);
+    }
+
+    // 关闭特效
+    function closeAllEffects() {
+        overlay.style.display = 'none';
+        canvas.style.display = 'none';
+        addLine("PROCESS INTERRUPTED BY USER.", "#ffffff");
+    }
+
+    // --- 5. 点击互动 (手机端友好) ---
+    document.body.addEventListener('click', (e) => {
+        if(bootScreen.style.display !== 'none') return; // 启动屏不触发
+        
+        input.focus(); // 始终抢夺焦点
+
+        // 创建波纹特效
+        const ripple = document.createElement('div');
+        ripple.className = 'ripple';
+        ripple.style.left = e.clientX + 'px';
+        ripple.style.top = e.clientY + 'px';
+        document.body.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+
+        // 随机生成互动文字
+        const phrases = ["Scanning sector...", "Decrypting...", "Packet intercepted", "Proxy connected", "Analyzing threat..."];
+        addLine(phrases[Math.floor(Math.random() * phrases.length)], "#ffffff");
+        scrollToBottom();
+    });
+
+    // 保持输入框焦点
+    setInterval(() => {
+        if(isRunning && document.activeElement !== input) input.focus();
+    }, 500);
+
+</script>
+</body>
+</html>
