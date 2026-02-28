@@ -1,0 +1,342 @@
+/* ==========================================
+   文件名：css/components.css
+   功能：按钮、卡片、进度条等具体组件样式
+   ========================================== */
+
+/* --- 1. 字母按钮 (A-Z) 样式 --- */
+.letter-btn {
+    /* 布局 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 5px;
+    
+    /* 外观 */
+    background: rgba(0, 10, 0, 0.6);
+    border: 1px solid var(--main-color-dim);
+    border-radius: 4px;
+    color: var(--main-color);
+    cursor: pointer;
+    
+    /* 字体 */
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    
+    /* 交互 */
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    outline: none;
+}
+
+/* 按钮内的字母 */
+.letter-btn .key {
+    font-size: 18px;
+    margin-bottom: 2px;
+    text-shadow: 0 0 5px var(--main-color);
+}
+
+/* 按钮内的功能描述 */
+.letter-btn .desc {
+    font-size: 8px;
+    color: var(--accent-color);
+    opacity: 0.7;
+    text-align: center;
+    line-height: 1.1;
+}
+
+/* 悬停效果 */
+.letter-btn:hover {
+    background: rgba(0, 255, 0, 0.1);
+    border-color: var(--main-color);
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+    transform: translateY(-1px);
+}
+
+/* 按下效果 */
+.letter-btn:active {
+    transform: translateY(1px);
+    background: rgba(0, 255, 0, 0.2);
+    box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+/* 不同功能按钮的颜色主题 */
+.letter-btn[data-type="attack"] { border-color: var(--alert-color); color: var(--alert-color); }
+.letter-btn[data-type="attack"] .key { text-shadow: 0 0 5px var(--alert-color); }
+
+.letter-btn[data-type="hack"] { border-color: var(--main-color); color: var(--main-color); }
+.letter-btn[data-type="hack"] .key { text-shadow: 0 0 5px var(--main-color); }
+
+.letter-btn[data-type="scan"] { border-color: var(--accent-color); color: var(--accent-color); }
+.letter-btn[data-type="scan"] .key { text-shadow: 0 0 5px var(--accent-color); }
+
+.letter-btn[data-type="util"] { border-color: var(--warning-color); color: var(--warning-color); }
+.letter-btn[data-type="util"] .key { text-shadow: 0 0 5px var(--warning-color); }
+
+
+/* --- 2. 日志行样式 --- */
+.log-entry {
+    margin-bottom: 4px;
+    line-height: 1.4;
+    font-size: 13px;
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    animation: fadeIn 0.3s ease;
+}
+
+/* 不同类型日志的颜色 */
+.log-entry.info { color: var(--accent-color); }
+.log-entry.success { color: var(--main-color); text-shadow: 0 0 2px var(--main-color); }
+.log-entry.error { color: var(--alert-color); font-weight: bold; }
+.log-entry.warning { color: var(--warning-color); }
+.log-entry.system { color: #ffffff; background: rgba(255, 255, 255, 0.05); padding: 2px 5px; border-radius: 2px; }
+
+/* 打字机光标效果 */
+.log-entry.typing::after {
+    content: '▊';
+    animation: blink 1s infinite;
+    margin-left: 2px;
+}
+
+/* --- 3. 数据可视化卡片 --- */
+.vis-card {
+    background: rgba(15, 15, 15, 0.9);
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 10px;
+    position: relative;
+}
+
+/* 卡片标题 */
+.vis-card h3 {
+    font-size: 12px;
+    margin-bottom: 8px;
+    color: #888;
+    text-transform: uppercase;
+    border-bottom: 1px solid #333;
+    padding-bottom: 4px;
+}
+
+/* 动态图表模拟 */
+.chart-placeholder {
+    height: 100px;
+    background: linear-gradient(0deg, rgba(0, 255, 0, 0.05) 0%, transparent 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 扫描线动画 */
+.chart-placeholder::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--main-color);
+    box-shadow: 0 0 10px var(--main-color);
+    animation: scanline 2s linear infinite;
+}
+
+@keyframes scanline {
+    0% { top: 0%; opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+
+/* --- 4. 进度条组件 --- */
+.progress-bar-container {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.progress-track {
+    width: 100%;
+    height: 6px;
+    background: #222;
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--main-color);
+    box-shadow: 0 0 10px var(--main-color);
+    width: 0%;
+    transition: width 0.2s ease;
+    position: relative;
+}
+
+/* 进度条闪光效果 */
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-text {
+    text-align: center;
+    font-size: 10px;
+    margin-top: 5px;
+    color: #888;
+}
+
+/* --- 5. 状态指示灯 --- */
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+    position: relative;
+}
+
+.status-indicator::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    background: inherit;
+    opacity: 0.5;
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.green { background: var(--main-color); }
+.status-indicator.red { background: var(--alert-color); }
+.status-indicator.yellow { background: var(--warning-color); }
+
+/* --- 6. 高级输入面板装饰 --- */
+#fake-input-area {
+    position: relative;
+}
+
+/* 输入框聚焦时的扫描线效果 */
+#fake-input-area::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    pointer-events: none;
+    transition: border-color 0.3s;
+}
+
+#fake-input-area:focus-within::before {
+    border-color: var(--main-color);
+    animation: border-glow 1.5s infinite;
+}
+
+@keyframes border-glow {
+    0%, 100% { box-shadow: 0 0 5px var(--main-color); }
+    50% { box-shadow: 0 0 15px var(--main-color); }
+}
+
+/* --- 7. 快速操作按钮 --- */
+.action-btn {
+    padding: 8px;
+    background: transparent;
+    border: 1px solid #444;
+    color: #aaa;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.action-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background: rgba(0, 255, 255, 0.1);
+}
+
+.action-btn.panic:hover {
+    border-color: var(--alert-color);
+    color: var(--alert-color);
+    background: rgba(255, 0, 68, 0.1);
+    animation: shake 0.5s;
+}
+
+/* --- 8. 动画关键帧定义 --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 0.5; }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* 扫描线全局效果 */
+#scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9998;
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(0, 0, 0, 0.1) 3px,
+        rgba(0, 0, 0, 0.1) 4px
+    );
+    opacity: 0.3;
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+    .vis-card h3 {
+        font-size: 10px;
+    }
+    
+    .letter-btn .desc {
+        font-size: 7px;
+    }
+}
+
+@media (max-width: 900px) {
+    .letter-btn .desc {
+        display: none; /* 小屏幕隐藏描述文字 */
+    }
+    
+    .letter-btn {
+        padding: 5px;
+    }
+    
+    .letter-btn .key {
+        font-size: 16px;
+    }
+}
