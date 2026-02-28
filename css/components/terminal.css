@@ -1,0 +1,41 @@
+#terminal-output {
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap; /* 保留空格和换行 */
+    height: calc(100% - 40px);
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+#terminal-input-area {
+    display: flex;
+    align-items: center;
+    border-top: 1px solid var(--dim-color);
+    padding-top: 10px;
+}
+
+.prompt {
+    margin-right: 10px;
+    color: var(--accent-color);
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+#terminal-input {
+    background: transparent;
+    border: none;
+    color: var(--main-color);
+    caret-color: var(--main-color); /* 光标颜色 */
+    outline: none;
+    flex-grow: 1;
+    font-family: var(--text-font);
+    font-size: 16px;
+    text-shadow: 0 0 5px var(--main-color);
+}
+
+/* 输出文本的颜色类 */
+.line { display: block; }
+.line.error { color: var(--alert-color); }
+.line.success { color: var(--main-color); }
+.line.info { color: var(--accent-color); }
+.line.warning { color: #ffaa00; }
