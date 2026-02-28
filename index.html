@@ -3,62 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SYSTEM TERMINAL v6.66 [SECURE]</title>
-    
+    <title>QUANTUM HACK TERMINAL v2.0</title>
     <!-- 核心样式 -->
     <link rel="stylesheet" href="css/main.css">
-    <!-- 视觉特效样式 -->
-    <link rel="stylesheet" href="css/effects.css">
-    <!-- 组件样式 -->
-    <link rel="stylesheet" href="css/components/terminal.css">
-    
-    <!-- 预加载字体 (可选，建议加上以增强专业感) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <!-- 默认主题 -->
+    <link rel="stylesheet" href="css/themes/dark.css" id="theme-link">
+    <!-- 音效预加载 -->
+    <link rel="preload" href="assets/audio/key-press.mp3" as="audio">
 </head>
 <body>
-    <!-- 开机启动画面 -->
-    <div id="boot-sequence" onclick="App.boot()">
-        <div class="boot-logo">SECURE CONNECTION ESTABLISHED</div>
-        <div class="boot-text">SYSTEM READY</div>
-        <div class="boot-text" style="color: var(--blue-color);">CLICK ANYWHERE TO INITIALIZE</div>
-        <div class="cursor-blink">_</div>
-    </div>
-
-    <!-- 主工作区 -->
-    <div id="desktop">
-        <!-- 窗口容器，用于放置未来的工具窗口 -->
-        <div id="windows-container"></div>
-        
-        <!-- 主终端窗口 -->
-        <div id="terminal-window" class="window active">
-            <div class="window-header">
-                <span class="title">TERMINAL</span>
-                <div class="controls">
-                    <span class="minimize">_</span>
-                    <span class="maximize">□</span>
-                    <span class="close">×</span>
-                </div>
-            </div>
-            <div class="window-body">
-                <div id="terminal-output"></div>
-                <div id="terminal-input-area">
-                    <span class="prompt">root@system:~$</span>
-                    <input type="text" id="terminal-input" autofocus autocomplete="off" autocapitalize="off" spellcheck="false">
-                </div>
-            </div>
+    <!-- 系统启动画面 -->
+    <div id="boot-sequence">
+        <div class="boot-container">
+            <div class="boot-logo">QHT</div>
+            <div class="boot-text">INITIALIZING QUANTUM CONNECTION...</div>
+            <div class="boot-progress"></div>
         </div>
     </div>
 
-    <!-- 全局特效层 (Canvas) -->
-    <canvas id="effect-layer"></canvas>
+    <!-- 主应用容器 -->
+    <div id="main-container">
+        <!-- 顶部状态栏 -->
+        <header id="status-bar">
+            <div class="status-left">
+                <span class="status-item">SYSTEM: <span id="system-status" class="value">ONLINE</span></span>
+                <span class="status-item">ENCRYPTION: <span id="encryption-level" class="value">AES-256</span></span>
+                <span class="status-item">PROXY: <span id="proxy-status" class="value">ACTIVE</span></span>
+            </div>
+            <div class="status-center">
+                <span id="terminal-title">QUANTUM HACK TERMINAL</span>
+            </div>
+            <div class="status-right">
+                <span class="status-item">UPTIME: <span id="uptime" class="value">00:00:00</span></span>
+                <span class="status-item">CPU: <span id="cpu-usage" class="value">12%</span></span>
+                <span class="status-item">MEM: <span id="mem-usage" class="value">3.2GB</span></span>
+            </div>
+        </header>
 
-    <!-- 音效 (模拟键盘声) -->
-    <audio id="audio-keypress" src="assets/audio/key-press.mp3" preload="auto"></audio>
+        <!-- 主体布局 -->
+        <div id="main-layout">
+            <!-- 左侧：26字母按钮面板 -->
+            <aside id="button-panel">
+                <div class="panel-header">
+                    <h2>COMMAND CENTER</h2>
+                    <div class="mode-indicator">
+                        <span class="active">SIMPLE</span>
+                        <span>ADVANCED</span>
+                    </div>
+                </div>
+                <div id="buttons-grid">
+                    <!-- 按钮将通过JS动态生成 -->
+                </div>
+            </aside>
 
-    <!-- 核心脚本 -->
-    <script src="js/data/config.js"></script>
-    <script src="js/engine/terminal.js"></script>
+            <!-- 中间：核心显示区 -->
+            <main id="display-area">
+                <!-- 日志输出区 -->
+                <div id="terminal-output">
+                    <div class="output-header">SYSTEM LOG</div>
+                    <div id="log-container">
+                        <!-- 日志内容动态生成 -->
+                    </div>
+                </div>
+                
+                <!-- Canvas特效层 -->
+                <canvas id="effect-canvas"></canvas>
+                
+                <!-- 数据可视化区 -->
+                <div id="data-visualization">
+                    <div class="vis-card" id="network-stats">
+                        <h3>NETWORK TRAFFIC</h3>
+                        <div class="chart-placeholder"></div>
+                    </div>
+                    <div class="vis-card" id="system-resources">
+                        <h3>SYSTEM RESOURCES</h3>
+                        <div class="chart-placeholder"></div>
+                    </div>
+                    <div class="vis-card" id="attack-progress">
+                        <h3>ATTACK PROGRESS</h3>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="main-progress"></div>
+                            <span class="progress-text">READY</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- 右侧：高级控制与输入区 -->
+            <aside id="control-panel">
+                <div class="panel-section">
+                    <h3>ADVANCED INPUT</h3>
+                    <div id="fake-input-area">
+                        <div class="input-label">DECRYPTION KEY:</div>
+                        <input type="text" id="advanced-input" placeholder="Enter code sequence..." autocomplete="off">
+                        <div class="input-hint">For advanced users only. Numbers 1-9 trigger special functions.</div>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>QUICK ACTIONS</h3>
+                    <div id="quick-actions">
+                        <button class="action-btn" onclick="triggerAction('panic')">PANIC BUTTON</button>
+                        <button class="action-btn" onclick="triggerAction('glitch')">GLITCH MODE</button>
+                        <button class="action-btn" onclick="triggerAction('reboot')">REBOOT SYSTEM</button>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>SYSTEM MONITOR</h3>
+                    <div id="system-monitor">
+                        <div class="monitor-item">
+                            <span>THREADS:</span>
+                            <span id="thread-count">0</span>
+                        </div>
+                        <div class="monitor-item">
+                            <span>PACKETS:</span>
+                            <span id="packet-count">0</span>
+                        </div>
+                        <div class="monitor-item">
+                            <span>ERRORS:</span>
+                            <span id="error-count">0</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- 底部信息栏 -->
+        <footer id="info-bar">
+            <div class="info-left">
+                <span class="blink-dot"></span>
+                <span>SYSTEM ACTIVE</span>
+                <span>•</span>
+                <span id="current-time">00:00:00</span>
+            </div>
+            <div class="info-center">
+                <span id="tip-text">Press any letter button to begin simulation</span>
+            </div>
+            <div class="info-right">
+                <span>LATENCY: <span id="latency">42ms</span></span>
+                <span>•</span>
+                <span>BANDWIDTH: <span id="bandwidth">1.2 GB/s</span></span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 全局特效层 -->
+    <div id="global-overlay">
+        <div class="overlay-content"></div>
+    </div>
+
+    <!-- 脚本加载 -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/effects.js"></script>
+    <script src="js/simple-commands.js"></script>
+    <script src="js/advanced-commands.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
