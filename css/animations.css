@@ -1,0 +1,237 @@
+/* ==========================================
+   文件名：css/animations.css
+   功能：定义所有动画关键帧和过渡效果
+   ========================================== */
+
+/* --- 1. 基础动画 --- */
+
+/* 闪烁效果 (用于光标、提示点) */
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* 脉冲效果 (用于状态指示灯) */
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* 呼吸效果 (用于背景元素) */
+@keyframes breathe {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+}
+
+/* --- 2. 文字特效 --- */
+
+/* 打字机效果 (配合JS使用) */
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+/* 文字闪烁 (用于重要警告) */
+@keyframes text-flash {
+    0%, 100% { color: var(--main-color); text-shadow: 0 0 10px var(--main-color); }
+    50% { color: var(--alert-color); text-shadow: 0 0 15px var(--alert-color); }
+}
+
+/* 文字抖动 (用于错误提示) */
+@keyframes text-shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+    20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+/* --- 3. 故障艺术效果 (Glitch) --- */
+@keyframes glitch-anim {
+    0% { transform: translate(0); }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, 2px); }
+    80% { transform: translate(2px, -2px); }
+    100% { transform: translate(0); }
+}
+
+@keyframes glitch-anim-2 {
+    0% { transform: translate(0); }
+    20% { transform: translate(2px, -2px); }
+    40% { transform: translate(2px, 2px); }
+    60% { transform: translate(-2px, -2px); }
+    80% { transform: translate(-2px, 2px); }
+    100% { transform: translate(0); }
+}
+
+/* 应用故障效果的类 */
+.glitch {
+    animation: glitch-anim 0.3s infinite;
+}
+
+.glitch-hard {
+    animation: glitch-anim-2 0.2s infinite;
+}
+
+/* --- 4. 扫描线动画 --- */
+@keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+}
+
+/* 移动的扫描线 */
+.scanline-moving {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: rgba(0, 255, 0, 0.8);
+    box-shadow: 0 0 10px var(--main-color);
+    animation: scanline 4s linear infinite;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* --- 5. 进度与加载动画 --- */
+@keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+}
+
+.shimmer {
+    background: linear-gradient(90deg, 
+        var(--main-color-dim) 0%, 
+        var(--main-color) 50%, 
+        var(--main-color-dim) 100%);
+    background-size: 200% auto;
+    animation: shimmer 2s linear infinite;
+}
+
+/* 环形加载动画 */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(0, 255, 0, 0.2);
+    border-top-color: var(--main-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* --- 6. 霓虹灯效果 --- */
+@keyframes neon-flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+        text-shadow: 
+            0 0 4px #fff,
+            0 0 11px #fff,
+            0 0 19px #fff,
+            0 0 40px var(--main-color),
+            0 0 80px var(--main-color),
+            0 0 90px var(--main-color),
+            0 0 100px var(--main-color),
+            0 0 150px var(--main-color);
+    }
+    20%, 24%, 55% {
+        text-shadow: none;
+    }
+}
+
+.neon-text {
+    animation: neon-flicker 1.5s infinite alternate;
+}
+
+/* --- 7. 波纹扩散效果 (用于按钮点击) --- */
+@keyframes ripple-effect {
+    0% { transform: scale(0); opacity: 0.5; }
+    100% { transform: scale(4); opacity: 0; }
+}
+
+.ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(0, 255, 0, 0.3);
+    animation: ripple-effect 0.6s linear;
+    pointer-events: none;
+}
+
+/* --- 8. 渐入/渐出动画 --- */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* 应用渐入效果的类 */
+.fade-in { animation: fadeIn 0.5s ease forwards; }
+.fade-in-up { animation: fadeInUp 0.5s ease forwards; }
+.fade-in-down { animation: fadeInDown 0.5s ease forwards; }
+.fade-in-left { animation: fadeInLeft 0.5s ease forwards; }
+.fade-in-right { animation: fadeInRight 0.5s ease forwards; }
+
+/* --- 9. 震动效果 --- */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake { animation: shake 0.5s; }
+
+/* --- 10. 3D翻转效果 --- */
+@keyframes flip-in {
+    0% { transform: perspective(400px) rotateY(90deg); opacity: 0; }
+    40% { transform: perspective(400px) rotateY(-20deg); }
+    70% { transform: perspective(400px) rotateY(10deg); }
+    100% { transform: perspective(400px) rotateY(0); opacity: 1; }
+}
+
+.flip-in { animation: flip-in 0.8s ease forwards; }
+
+/* --- 11. 打字机删除效果 --- */
+@keyframes typing-cursor {
+    0%, 100% { border-color: transparent; }
+    50% { border-color: var(--main-color); }
+}
+
+.typing-cursor {
+    border-right: 2px solid;
+    animation: typing-cursor 0.7s step-end infinite;
+}
+
+/* --- 12. 数据流动画 (用于背景) --- */
+@keyframes data-flow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+.data-flow {
+    background: linear-gradient(90deg, 
+        transparent, 
+        var(--main-color), 
+        transparent);
+    background-size: 200% 200%;
+    animation: data-flow 3s linear infinite;
+}
