@@ -2,317 +2,512 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#00ff00">
-    <meta name="description" content="量子黑客终端 - 沉浸式黑客模拟器">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="黑客终端">
-    <title>量子黑客终端 - QUANTUM HACK TERMINAL v2.0</title>
-    
-    <!-- PWA 支持 -->
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-    <!-- 核心样式 -->
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/animations.css">
-    <!-- 增强样式（新增） -->
-    <link rel="stylesheet" href="css/enhanced.css">
-    <!-- 默认主题 -->
-    <link rel="stylesheet" href="css/themes/dark.css" id="theme-link">
-    <!-- 音效预加载 -->
-    <link rel="preload" href="assets/audio/key-press.mp3" as="audio">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Effects Lab - 特效实验室</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000000;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+            pointer-events: auto;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            letter-spacing: 4px;
+        }
+
+        .header p {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .control-panel {
+            position: absolute;
+            left: 20px;
+            top: 100px;
+            width: 250px;
+            background: rgba(10, 10, 30, 0.9);
+            border: 1px solid #00ffff;
+            border-radius: 4px;
+            padding: 20px;
+            pointer-events: auto;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .control-panel h2 {
+            font-size: 16px;
+            color: #00ffff;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #00ffff;
+            padding-bottom: 10px;
+        }
+
+        .effect-category {
+            margin-bottom: 20px;
+        }
+
+        .effect-category h3 {
+            font-size: 14px;
+            color: #00ff00;
+            margin-bottom: 10px;
+        }
+
+        .effect-list {
+            list-style: none;
+        }
+
+        .effect-item {
+            padding: 8px 12px;
+            margin: 4px 0;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .effect-item:hover {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: #00ffff;
+            transform: translateX(5px);
+        }
+
+        .effect-item.active {
+            background: rgba(0, 255, 255, 0.3);
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .params-panel {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+
+        .param-control {
+            margin-bottom: 15px;
+        }
+
+        .param-control label {
+            display: block;
+            font-size: 12px;
+            color: #ccc;
+            margin-bottom: 5px;
+        }
+
+        .param-control input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .param-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #00ffff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .status-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: rgba(10, 10, 30, 0.9);
+            border: 1px solid #00ffff;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .status-item {
+            display: inline-block;
+            margin-right: 20px;
+            color: #00ff00;
+        }
+
+        .status-item span {
+            color: #00ffff;
+            font-weight: bold;
+        }
+
+        .help-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ffff;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 500px;
+            text-align: center;
+            display: none;
+            pointer-events: auto;
+        }
+
+        .help-overlay h2 {
+            color: #00ffff;
+            margin-bottom: 20px;
+        }
+
+        .help-overlay ul {
+            text-align: left;
+            margin: 20px 0;
+            list-style: none;
+        }
+
+        .help-overlay li {
+            margin: 10px 0;
+            color: #ccc;
+        }
+
+        .help-overlay kbd {
+            background: #333;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #00ffff;
+            font-family: monospace;
+        }
+
+        .help-overlay button {
+            margin-top: 20px;
+            padding: 10px 30px;
+            background: #00ffff;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .help-overlay button:hover {
+            background: #00ccff;
+        }
+
+        /* 滚动条样式 */
+        .control-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .control-panel::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .control-panel::-webkit-scrollbar-thumb {
+            background: #00ffff;
+            border-radius: 4px;
+        }
+
+        /* 全屏模式 */
+        body.fullscreen .ui-overlay {
+            display: none;
+        }
+
+        body.fullscreen #canvas {
+            cursor: none;
+        }
+    </style>
 </head>
 <body>
-    <!-- 系统启动画面 -->
-    <div id="boot-sequence">
-        <div class="boot-container">
-            <div class="boot-logo">QHT</div>
-            <div class="boot-text">INITIALIZING QUANTUM CONNECTION...</div>
-            <div class="boot-progress"></div>
-        </div>
-    </div>
+    <canvas id="canvas"></canvas>
 
-    <!-- 主应用容器 -->
-    <div id="main-container">
-        <!-- 顶部状态栏 -->
-        <header id="status-bar">
-            <div class="status-left">
-                <span class="status-item">SYSTEM: <span id="system-status" class="value">ONLINE</span></span>
-                <span class="status-item">ENCRYPTION: <span id="encryption-level" class="value">AES-256</span></span>
-                <span class="status-item">PROXY: <span id="proxy-status" class="value">ACTIVE</span></span>
-            </div>
-            <div class="status-center">
-                <span id="terminal-title">QUANTUM HACK TERMINAL</span>
-            </div>
-            <div class="status-right">
-                <span class="status-item">UPTIME: <span id="uptime" class="value">00:00:00</span></span>
-                <span class="status-item">CPU: <span id="cpu-usage" class="value">12%</span></span>
-                <span class="status-item">MEM: <span id="mem-usage" class="value">3.2GB</span></span>
-            </div>
+    <div class="ui-overlay">
+        <header class="header">
+            <h1>VISUAL EFFECTS LAB</h1>
+            <p>代码生成的视觉特效展示平台</p>
         </header>
 
-        <!-- 主体布局 -->
-        <div id="main-layout">
-            <!-- 左侧：26 字母按钮面板 -->
-            <aside id="button-panel">
-                <div class="panel-header">
-                    <h2>COMMAND CENTER</h2>
-                    <div class="mode-indicator">
-                        <span class="active">SIMPLE</span>
-                        <span>ADVANCED</span>
-                    </div>
-                </div>
-                
-                <!-- 快速启动区 -->
-                <div id="quick-start-panel" style="padding: 10px; border-bottom: 1px solid #333; background: rgba(0,255,0,0.05);">
-                    <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;">
-                        <button onclick="UserExperience.oneClickDemo()" style="flex: 1; padding: 10px; background: linear-gradient(135deg, #00ff00, #00aa00); border: none; border-radius: 8px; color: #000; font-weight: bold; cursor: pointer; font-size: 14px;">
-                            ▶️ 一键演示
-                        </button>
-                        <button onclick="UserExperience.showRecommendedCommands()" style="flex: 1; padding: 10px; background: transparent; border: 2px solid #00ff00; border-radius: 8px; color: #00ff00; cursor: pointer; font-weight: bold; font-size: 14px;">
-                            ⭐ 热门推荐
-                        </button>
-                    </div>
-                    <div style="text-align: center; color: #888; font-size: 12px;">
-                        💡 不知道按哪个？试试上面的按钮！
-                    </div>
-                </div>
-                
-                <div id="buttons-grid">
-                    <!-- 按钮将通过 JS 动态生成 -->
-                </div>
-            </aside>
+        <aside class="control-panel">
+            <h2>⚡ 特效列表</h2>
+            
+            <div class="effect-category">
+                <h3>⟷ 横向排列</h3>
+                <ul class="effect-list" id="horizontal-effects">
+                    <li class="effect-item" data-effect="HorizontalWaveFlow">Wave Flow</li>
+                    <li class="effect-item" data-effect="ParticleStream">Particle Stream</li>
+                </ul>
+            </div>
 
-            <!-- 中间：核心显示区 -->
-            <main id="display-area">
-                <!-- 日志输出区 -->
-                <div id="terminal-output">
-                    <div class="output-header">SYSTEM LOG</div>
-                    <div id="log-container">
-                        <!-- 日志内容动态生成 -->
-                    </div>
-                </div>
-                
-                <!-- Canvas特效层 -->
-                <canvas id="effect-canvas"></canvas>
-                
-                <!-- 数据可视化区 -->
-                <div id="data-visualization">
-                    <div class="vis-card" id="network-stats">
-                        <h3>NETWORK TRAFFIC</h3>
-                        <div class="chart-placeholder"></div>
-                    </div>
-                    <div class="vis-card" id="system-resources">
-                        <h3>SYSTEM RESOURCES</h3>
-                        <div class="chart-placeholder"></div>
-                    </div>
-                    <div class="vis-card" id="attack-progress">
-                        <h3>ATTACK PROGRESS</h3>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar" id="main-progress"></div>
-                            <span class="progress-text">READY</span>
-                        </div>
-                    </div>
-                </div>
-            </main>
+            <div class="effect-category">
+                <h3>⟳ 纵向排列</h3>
+                <ul class="effect-list" id="vertical-effects">
+                    <li class="effect-item" data-effect="RainDrop">Rain Drop</li>
+                </ul>
+            </div>
 
-            <!-- 右侧：高级控制与输入区 -->
-            <aside id="control-panel">
-                <div class="panel-section">
-                    <h3>ADVANCED INPUT</h3>
-                    <div id="fake-input-area">
-                        <div class="input-label">DECRYPTION KEY:</div>
-                        <input type="text" id="advanced-input" placeholder="Enter code sequence..." autocomplete="off">
-                        <div class="input-hint">For advanced users only. Numbers 1-9 trigger special functions.</div>
-                    </div>
+            <div class="effect-category">
+                <h3>⤡ 斜向排列</h3>
+                <ul class="effect-list" id="diagonal-effects">
+                    <li class="effect-item" data-effect="DiagonalSlash">Diagonal Slash</li>
+                </ul>
+            </div>
+
+            <div class="effect-category">
+                <h3>⟳ 动态变化</h3>
+                <ul class="effect-list" id="dynamic-effects">
+                    <li class="effect-item" data-effect="PulseWave">Pulse Wave</li>
+                </ul>
+            </div>
+
+            <div class="params-panel" id="params-panel">
+                <h2>🎛️ 参数控制</h2>
+                <div id="param-controls">
+                    <p style="color: #666; font-size: 12px;">选择一个特效以调节参数</p>
                 </div>
-                
-                <div class="panel-section">
-                    <h3>QUICK ACTIONS</h3>
-                    <div id="quick-actions">
-                        <button class="action-btn" onclick="triggerAction('panic')">PANIC BUTTON</button>
-                        <button class="action-btn" onclick="triggerAction('glitch')">GLITCH MODE</button>
-                        <button class="action-btn" onclick="triggerAction('reboot')">REBOOT SYSTEM</button>
-                        <button class="action-btn" onclick="triggerAction('theme')">CHANGE THEME</button>
-                        <button class="action-btn" onclick="triggerAction('audio')">TOGGLE AUDIO</button>
-                    </div>
-                </div>
-                
-                <div class="panel-section">
-                    <h3>SYSTEM MONITOR</h3>
-                    <div id="system-monitor">
-                        <div class="monitor-item">
-                            <span>THREADS:</span>
-                            <span id="thread-count">0</span>
-                        </div>
-                        <div class="monitor-item">
-                            <span>PACKETS:</span>
-                            <span id="packet-count">0</span>
-                        </div>
-                        <div class="monitor-item">
-                            <span>ERRORS:</span>
-                            <span id="error-count">0</span>
-                        </div>
-                    </div>
-                </div>
-            </aside>
+            </div>
+        </aside>
+
+        <div class="status-bar">
+            <div class="status-item">FPS: <span id="fps-counter">60</span></div>
+            <div class="status-item">特效：<span id="current-effect">无</span></div>
+            <div class="status-item">按 <kbd>H</kbd> 查看帮助</div>
         </div>
 
-        <!-- 底部信息栏 -->
-        <footer id="info-bar">
-            <div class="info-left">
-                <span class="blink-dot"></span>
-                <span>SYSTEM ACTIVE</span>
-                <span>•</span>
-                <span id="current-time">00:00:00</span>
-            </div>
-            <div class="info-center">
-                <span id="tip-text">Press any letter button to begin simulation</span>
-            </div>
-            <div class="info-right">
-                <span>LATENCY: <span id="latency">42ms</span></span>
-                <span>•</span>
-                <span>BANDWIDTH: <span id="bandwidth">1.2 GB/s</span></span>
-            </div>
-        </footer>
+        <div class="help-overlay" id="help-overlay">
+            <h2>📖 操作指南</h2>
+            <ul>
+                <li><kbd>←</kbd> <kbd>→</kbd> - 切换上一个/下一个特效</li>
+                <li><kbd>Space</kbd> - 暂停/继续</li>
+                <li><kbd>F</kbd> - 全屏切换</li>
+                <li><kbd>R</kbd> - 重置参数</li>
+                <li><kbd>H</kbd> - 显示/隐藏帮助</li>
+                <li><kbd>ESC</kbd> - 关闭帮助/退出全屏</li>
+            </ul>
+            <button onclick="toggleHelp()">关闭</button>
+        </div>
     </div>
 
-    <!-- 全局特效层 -->
-    <div id="global-overlay">
-        <div class="overlay-content"></div>
-    </div>
+    <!-- 脚本加载 -->
+    <script src="js/core/Utils.js"></script>
+    <script src="js/core/BaseEffect.js"></script>
+    <script src="js/core/Engine.js"></script>
+    
+    <!-- 横向特效 -->
+    <script src="js/effects/horizontal/WaveFlow.js"></script>
+    <script src="js/effects/horizontal/ParticleStream.js"></script>
+    
+    <!-- 纵向特效 -->
+    <script src="js/effects/vertical/RainDrop.js"></script>
+    
+    <!-- 斜向特效 -->
+    <script src="js/effects/diagonal/DiagonalSlash.js"></script>
+    
+    <!-- 动态特效 -->
+    <script src="js/effects/dynamic/PulseWave.js"></script>
 
-    <!-- 右下角浮动按钮组 -->
-    <div style="position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 9999;">
-        <button onclick="QuestSystem.showQuestPanel()" style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #ff6600, #ff3300); border: none; color: #fff; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 102, 0, 0.4); transition: all 0.3s;" title="任务中心">📋</button>
-        <button onclick="ModernUI.showHelpPanel()" style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #00ff00, #00aa00); border: none; color: #000; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 255, 0, 0.4); transition: all 0.3s;" title="帮助">❓</button>
-        <button onclick="SettingsPanel.showSettingsPanel()" style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #666, #444); border: none; color: #fff; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(100, 100, 100, 0.4); transition: all 0.3s;" title="设置">⚙️</button>
-    </div>
-
-    <!-- 脚本加载：模块化架构 -->
-    <!-- 1. 配置层 -->
-    <script src="js/config/CONFIG.js"></script>
-    
-    <!-- 2. 核心系统层 -->
-    <script src="js/core/EventBus.js"></script>
-    <script src="js/core/Container.js"></script>
-    <script src="js/core/SecurityManager.js"></script>
-    <script src="js/core/Application.js"></script>
-    
-    <!-- 3. 功能模块层 -->
-    <script src="js/ui/UIModule.js"></script>
-    <script src="js/ui/QuickActions.js"></script>
-    <script src="js/ui/ModernUI.js"></script>
-    <script src="js/ui/SettingsPanel.js"></script>
-    <script src="js/ui/CollapsibleUI.js"></script>
-    <script src="js/ui/NotificationSystem.js"></script>
-    <script src="js/effects/EffectsEngine.js"></script>
-    <script src="js/commands/CommandSystem.js"></script>
-    <script src="js/commands/LetterCommands.js"></script>
-    
-    <!-- 4. 系统服务层 -->
-    <script src="js/systems/AudioManager.js"></script>
-    <script src="js/systems/StorageManager.js"></script>
-    <script src="js/systems/ThemeManager.js"></script>
-    <script src="js/systems/UserExperience.js"></script>
-    <script src="js/systems/PerformanceManager.js"></script>
-    <script src="js/systems/QuestSystem.js"></script>
-    
-    <!-- 5. 工具层（保留兼容性） -->
-    <script src="js/utils.js"></script>
-    <script src="js/utils/Optimizer.js"></script>
-    
-    <!-- 6. 测试模块（开发环境） -->
-    <script src="js/tests/test-runner.js"></script>
-    <script src="js/tests/test-optimizations.js"></script>
-    
-    <!-- 7. 旧版兼容（可选，逐步移除） -->
-    <!-- <script src="js/app.js"></script> -->
-    <!-- <script src="js/simple-commands.js"></script> -->
-    <!-- <script src="js/effects.js"></script> -->
-    
-    <!-- 7. PWA Service Worker 注册 -->
     <script>
-        // 注册 Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful:', registration.scope);
-                    })
-                    .catch(err => {
-                        console.log('ServiceWorker registration failed:', err);
-                    });
+        // 全局变量
+        let engine = null;
+        let currentEffectName = null;
+        const effectNames = [
+            'HorizontalWaveFlow',
+            'ParticleStream',
+            'RainDrop',
+            'DiagonalSlash',
+            'PulseWave'
+        ];
+        let effectIndex = 0;
+
+        // 初始化引擎
+        function initEngine() {
+            const canvas = document.getElementById('canvas');
+            engine = new EffectEngine(canvas);
+
+            // 注册所有特效
+            engine.registerEffect('HorizontalWaveFlow', HorizontalWaveFlow);
+            engine.registerEffect('ParticleStream', ParticleStream);
+            engine.registerEffect('RainDrop', RainDrop);
+            engine.registerEffect('DiagonalSlash', DiagonalSlash);
+            engine.registerEffect('PulseWave', PulseWave);
+
+            // FPS 更新监听
+            canvas.addEventListener('fpsUpdate', (e) => {
+                document.getElementById('fps-counter').textContent = e.detail.fps;
             });
+
+            // 加载第一个特效
+            loadEffect(effectNames[0]);
         }
-        
-        // 检测安装支持
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            showInstallPrompt();
-        });
-        
-        function showInstallPrompt() {
-            const installBtn = document.createElement('button');
-            installBtn.id = 'install-pwa-btn';
-            installBtn.innerHTML = '📲 安装应用';
-            installBtn.style.cssText = `
-                position: fixed;
-                bottom: 100px;
-                right: 20px;
-                padding: 12px 24px;
-                background: linear-gradient(135deg, #00ff00, #00aa00);
-                border: none;
-                border-radius: 25px;
-                color: #000;
-                font-weight: bold;
-                font-size: 14px;
-                cursor: pointer;
-                z-index: 9999;
-                box-shadow: 0 4px 15px rgba(0, 255, 0, 0.4);
-                animation: pulse 2s infinite;
-            `;
-            
-            installBtn.onclick = () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('User accepted the install prompt');
-                        }
-                        deferredPrompt = null;
-                        installBtn.remove();
-                    });
-                }
-            };
-            
-            document.body.appendChild(installBtn);
-        }
-        
-        // 监听 Service Worker 更新
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.ready.then(registration => {
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            showUpdatePrompt();
-                        }
-                    });
+
+        // 加载特效
+        function loadEffect(effectName) {
+            if (engine) {
+                engine.loadEffect(effectName);
+                currentEffectName = effectName;
+                document.getElementById('current-effect').textContent = effectName;
+                
+                // 更新 UI
+                document.querySelectorAll('.effect-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.dataset.effect === effectName) {
+                        item.classList.add('active');
+                    }
                 });
-            });
-        }
-        
-        function showUpdatePrompt() {
-            if (confirm('有新版本可用！是否刷新页面以更新？')) {
-                window.location.reload();
+
+                // 生成参数控制面板
+                generateParamControls(effectName);
             }
         }
+
+        // 生成参数控制面板
+        function generateParamControls(effectName) {
+            const container = document.getElementById('param-controls');
+            container.innerHTML = '';
+
+            const effectClass = window[effectName];
+            if (!effectClass) return;
+
+            const instance = new effectClass(engine.canvas);
+            const params = instance.defaultParams;
+
+            for (const [key, value] of Object.entries(params)) {
+                if (typeof value === 'number') {
+                    const control = document.createElement('div');
+                    control.className = 'param-control';
+                    
+                    const label = document.createElement('label');
+                    label.textContent = key;
+                    control.appendChild(label);
+
+                    const slider = document.createElement('input');
+                    slider.type = 'range';
+                    slider.min = 0;
+                    slider.max = 100;
+                    slider.value = 50;
+                    slider.oninput = (e) => {
+                        const newValue = parseFloat(e.target.value);
+                        if (engine.currentEffect) {
+                            engine.currentEffect.updateParams({
+                                [key]: newValue
+                            });
+                        }
+                    };
+                    control.appendChild(slider);
+
+                    container.appendChild(control);
+                }
+            }
+        }
+
+        // 切换上一个特效
+        function prevEffect() {
+            effectIndex = (effectIndex - 1 + effectNames.length) % effectNames.length;
+            loadEffect(effectNames[effectIndex]);
+        }
+
+        // 切换下一个特效
+        function nextEffect() {
+            effectIndex = (effectIndex + 1) % effectNames.length;
+            loadEffect(effectNames[effectIndex]);
+        }
+
+        // 切换帮助
+        function toggleHelp() {
+            const overlay = document.getElementById('help-overlay');
+            overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // 键盘事件
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft':
+                    prevEffect();
+                    break;
+                case 'ArrowRight':
+                    nextEffect();
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    if (engine) engine.togglePause();
+                    break;
+                case 'f':
+                case 'F':
+                    document.body.classList.toggle('fullscreen');
+                    break;
+                case 'r':
+                case 'R':
+                    if (engine && engine.currentEffect) {
+                        engine.currentEffect.reset();
+                    }
+                    break;
+                case 'h':
+                case 'H':
+                    toggleHelp();
+                    break;
+                case 'Escape':
+                    document.getElementById('help-overlay').style.display = 'none';
+                    document.body.classList.remove('fullscreen');
+                    break;
+            }
+        });
+
+        // 点击特效列表
+        document.querySelectorAll('.effect-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const effectName = item.dataset.effect;
+                const index = effectNames.indexOf(effectName);
+                if (index !== -1) {
+                    effectIndex = index;
+                    loadEffect(effectName);
+                }
+            });
+        });
+
+        // 双击全屏
+        document.getElementById('canvas').addEventListener('dblclick', () => {
+            document.body.classList.toggle('fullscreen');
+        });
+
+        // 初始化
+        window.addEventListener('DOMContentLoaded', initEngine);
     </script>
 </body>
 </html>
