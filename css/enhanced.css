@@ -1,0 +1,669 @@
+/* ==========================================
+   文件名：css/enhanced.css
+   功能：增强视觉效果和交互体验的新增样式
+   版本：2.0 - 新增增强样式
+   ========================================== */
+
+/* ==================== 1. 按钮增强效果 ==================== */
+
+/* 霓虹灯按钮效果 */
+.letter-btn.neon {
+    animation: neon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes neon-pulse {
+    0%, 100% {
+        box-shadow: 0 0 5px currentColor, 0 0 10px currentColor, inset 0 0 5px currentColor;
+    }
+    50% {
+        box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, inset 0 0 10px currentColor;
+    }
+}
+
+/* 按钮激活时的波纹效果 */
+.letter-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s;
+}
+
+.letter-btn:active::after {
+    width: 200px;
+    height: 200px;
+}
+
+/* ==================== 2. 日志增强效果 ==================== */
+
+/* 日志条目滑入动画 */
+.log-entry.slide-in {
+    animation: slideInLeft 0.3s ease forwards;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 重要日志高亮 */
+.log-entry.important {
+    background: rgba(255, 0, 68, 0.1);
+    border-left: 3px solid var(--alert-color);
+    padding-left: 10px;
+    animation: important-pulse 1s ease infinite;
+}
+
+@keyframes important-pulse {
+    0%, 100% {
+        background: rgba(255, 0, 68, 0.1);
+    }
+    50% {
+        background: rgba(255, 0, 68, 0.2);
+    }
+}
+
+/* ==================== 3. 进度条增强 ==================== */
+
+/* 渐变进度条 */
+.progress-bar-gradient {
+    background: linear-gradient(
+        90deg,
+        #ff0000 0%,
+        #ffff00 50%,
+        #00ff00 100%
+    );
+    background-size: 200% 100%;
+    animation: gradient-shift 2s linear infinite;
+}
+
+@keyframes gradient-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 200% 50%;
+    }
+}
+
+/* 进度条数字显示 */
+.progress-bar-container::before {
+    content: attr(data-progress);
+    position: absolute;
+    right: 10px;
+    top: -20px;
+    font-size: 12px;
+    color: var(--main-color);
+}
+
+/* ==================== 4. 状态栏增强 ==================== */
+
+/* 状态栏呼吸灯效果 */
+.status-item::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--main-color);
+    margin-right: 5px;
+    animation: status-blink 2s ease-in-out infinite;
+}
+
+.status-item.error::before {
+    background: var(--alert-color);
+    animation: status-blink 0.5s ease-in-out infinite;
+}
+
+.status-item.warning::before {
+    background: var(--warning-color);
+    animation: status-blink 1s ease-in-out infinite;
+}
+
+@keyframes status-blink {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
+}
+
+/* ==================== 5. 输入框增强 ==================== */
+
+/* 输入框光标动画 */
+#advanced-input {
+    position: relative;
+    caret-color: var(--main-color);
+    animation: caret-blink 1s step-end infinite;
+}
+
+@keyframes caret-blink {
+    0%, 100% {
+        caret-color: var(--main-color);
+    }
+    50% {
+        caret-color: transparent;
+    }
+}
+
+/* 输入框错误状态 */
+#advanced-input.error {
+    border-color: var(--alert-color);
+    animation: input-shake 0.5s ease;
+    box-shadow: 0 0 10px rgba(255, 0, 68, 0.3);
+}
+
+@keyframes input-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* ==================== 6. 面板增强 ==================== */
+
+/* 面板玻璃效果 */
+#button-panel,
+#control-panel {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* 面板边框流光效果 */
+.panel-glow {
+    position: relative;
+}
+
+.panel-glow::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(
+        45deg,
+        var(--main-color),
+        transparent,
+        var(--accent-color),
+        transparent,
+        var(--main-color)
+    );
+    background-size: 400% 400%;
+    z-index: -1;
+    border-radius: inherit;
+    animation: panel-glow 3s linear infinite;
+}
+
+@keyframes panel-glow {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 400% 50%;
+    }
+}
+
+/* ==================== 7. 数据可视化增强 ==================== */
+
+/* 图表柱状图动画 */
+.chart-bar {
+    display: inline-block;
+    width: 20px;
+    background: linear-gradient(to top, var(--main-color-dim), var(--main-color));
+    margin: 0 2px;
+    border-radius: 2px 2px 0 0;
+    animation: chart-grow 0.5s ease forwards;
+    transform-origin: bottom;
+}
+
+@keyframes chart-grow {
+    from {
+        transform: scaleY(0);
+    }
+    to {
+        transform: scaleY(var(--height));
+    }
+}
+
+/* 雷达扫描效果 */
+.radar-scan {
+    position: relative;
+    overflow: hidden;
+}
+
+.radar-scan::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--main-color));
+    transform-origin: left center;
+    animation: radar-rotate 2s linear infinite;
+}
+
+@keyframes radar-rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ==================== 8. 全局特效增强 ==================== */
+
+/* CRT 屏幕效果 */
+.crt-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+}
+
+/* 屏幕曲率效果 */
+.crt-curve {
+    animation: crt-flicker 0.15s infinite;
+}
+
+@keyframes crt-flicker {
+    0%, 100% {
+        opacity: 0.97;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* ==================== 9. 成就系统 UI ==================== */
+
+/* 成就通知 */
+.achievement-notification {
+    position: fixed;
+    top: 80px;
+    right: -400px;
+    width: 350px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 20, 0.95));
+    border: 2px solid var(--main-color);
+    border-radius: 8px;
+    padding: 15px;
+    z-index: 10000;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    transition: right 0.5s ease;
+}
+
+.achievement-notification.show {
+    right: 20px;
+}
+
+.achievement-notification h4 {
+    color: var(--main-color);
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.achievement-notification p {
+    color: var(--text-color);
+    font-size: 12px;
+}
+
+/* ==================== 10. 等级系统 UI ==================== */
+
+/* 等级进度条 */
+.level-bar-container {
+    position: fixed;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--main-color-dim);
+    border-radius: 10px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+}
+
+.level-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--main-color-dim), var(--main-color));
+    border-radius: 8px;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.level-bar-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    color: white;
+    text-shadow: 0 0 5px black;
+}
+
+/* ==================== 11. 响应式增强 ==================== */
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+    .letter-btn .desc {
+        display: none;
+    }
+    
+    .letter-btn {
+        padding: 10px 5px;
+    }
+    
+    #button-panel {
+        width: 200px;
+    }
+    
+    #control-panel {
+        width: 250px;
+    }
+    
+    .achievement-notification {
+        width: calc(100% - 40px);
+        right: -100%;
+    }
+    
+    .level-bar-container {
+        width: calc(100% - 40px);
+    }
+}
+
+/* ==================== 12. 主题切换支持 ==================== */
+
+/* 亮色主题 */
+[data-theme="light"] {
+    --bg-color: #f0f0f0;
+    --bg-secondary: #ffffff;
+    --main-color: #00aa00;
+    --main-color-dim: #006600;
+    --text-color: #333333;
+    --text-dim: #666666;
+}
+
+/* 赛博朋克主题 */
+[data-theme="cyberpunk"] {
+    --bg-color: #0a0a1a;
+    --bg-secondary: #1a1a2e;
+    --main-color: #ff00ff;
+    --main-color-dim: #aa00aa;
+    --accent-color: #00ffff;
+    --alert-color: #ff3333;
+}
+
+/* 矩阵主题 */
+[data-theme="matrix"] {
+    --bg-color: #000000;
+    --bg-secondary: #0a0a0a;
+    --main-color: #00ff00;
+    --main-color-dim: #004400;
+    --accent-color: #00ff00;
+}
+
+/* ==================== 13. 加载动画 ==================== */
+
+/* 加载旋转器 */
+.loader {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 255, 0, 0.2);
+    border-top-color: var(--main-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 脉冲加载点 */
+.loading-dots {
+    display: flex;
+    gap: 5px;
+}
+
+.loading-dots span {
+    width: 8px;
+    height: 8px;
+    background: var(--main-color);
+    border-radius: 50%;
+    animation: loading-dot 1.4s ease-in-out infinite;
+}
+
+.loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes loading-dot {
+    0%, 80%, 100% {
+        transform: scale(0.6);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ==================== 14. 可折叠界面支持 ==================== */
+
+/* 折叠控制按钮 */
+.collapse-toggle {
+    background: transparent;
+    border: 1px solid var(--main-color-dim);
+    color: var(--main-color);
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-left: 8px;
+    padding: 0;
+    outline: none;
+}
+
+.collapse-toggle:hover {
+    background: rgba(0, 255, 0, 0.1);
+    border-color: var(--main-color);
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.collapse-toggle:active {
+    transform: scale(0.95);
+}
+
+/* 折叠按钮位置 */
+.collapse-top-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.collapse-left-toggle {
+    float: right;
+}
+
+.collapse-right-toggle {
+    float: right;
+}
+
+.collapse-bottom-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* 顶部导航栏折叠 */
+#status-bar.collapsed-top {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    transition: all 0.3s ease;
+}
+
+#status-bar:not(.collapsed-top) {
+    transition: all 0.3s ease;
+}
+
+/* 左侧按钮面板折叠 */
+#button-panel.collapsed-left {
+    transform: translateX(-100%);
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    width: 0;
+    transition: all 0.3s ease;
+}
+
+#button-panel:not(.collapsed-left) {
+    transition: all 0.3s ease;
+}
+
+/* 右侧控制面板折叠 */
+#control-panel.collapsed-right {
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    width: 0;
+    right: 0;
+    transition: all 0.3s ease;
+}
+
+#control-panel:not(.collapsed-right) {
+    transition: all 0.3s ease;
+}
+
+/* 底部信息栏折叠 */
+#info-bar.collapsed-bottom {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    transition: all 0.3s ease;
+}
+
+#info-bar:not(.collapsed-bottom) {
+    transition: all 0.3s ease;
+}
+
+/* 全屏模式布局调整 */
+body.fullscreen-mode #main-layout {
+    height: 100vh;
+}
+
+body.fullscreen-mode #display-area {
+    height: 100vh;
+}
+
+/* 折叠时的布局补偿 */
+#main-layout {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+#display-area {
+    transition: all 0.3s ease;
+}
+
+/* 左侧折叠时的补偿 */
+#main-layout:has(#button-panel.collapsed-left) #display-area {
+    margin-left: 0;
+}
+
+/* 右侧折叠时的补偿 */
+#main-layout:has(#control-panel.collapsed-right) #display-area {
+    margin-right: 0;
+}
+
+/* 顶部折叠时的补偿 */
+#main-layout:has(#status-bar.collapsed-top) {
+    padding-top: 0;
+}
+
+/* 底部折叠时的补偿 */
+#main-layout:has(#info-bar.collapsed-bottom) {
+    padding-bottom: 0;
+}
+
+/* 折叠提示动画 */
+@keyframes fold-hint {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
+.collapse-toggle.fold-hint {
+    animation: fold-hint 1.5s ease-in-out infinite;
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+    .collapse-toggle {
+        width: 20px;
+        height: 20px;
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* 移动端默认折叠侧边栏 */
+    #button-panel {
+        position: absolute;
+        z-index: 100;
+    }
+    
+    #control-panel {
+        position: absolute;
+        right: 0;
+        z-index: 100;
+    }
+}

@@ -3,11 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QUANTUM HACK TERMINAL v2.0</title>
+    <meta name="theme-color" content="#00ff00">
+    <meta name="description" content="量子黑客终端 - 沉浸式黑客模拟器">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="黑客终端">
+    <title>量子黑客终端 - QUANTUM HACK TERMINAL v2.0</title>
+    
+    <!-- PWA 支持 -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
     <!-- 核心样式 -->
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/animations.css">
+    <!-- 增强样式（新增） -->
+    <link rel="stylesheet" href="css/enhanced.css">
     <!-- 默认主题 -->
     <link rel="stylesheet" href="css/themes/dark.css" id="theme-link">
     <!-- 音效预加载 -->
@@ -44,7 +56,7 @@
 
         <!-- 主体布局 -->
         <div id="main-layout">
-            <!-- 左侧：26字母按钮面板 -->
+            <!-- 左侧：26 字母按钮面板 -->
             <aside id="button-panel">
                 <div class="panel-header">
                     <h2>COMMAND CENTER</h2>
@@ -53,8 +65,24 @@
                         <span>ADVANCED</span>
                     </div>
                 </div>
+                
+                <!-- 快速启动区 -->
+                <div id="quick-start-panel" style="padding: 10px; border-bottom: 1px solid #333; background: rgba(0,255,0,0.05);">
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;">
+                        <button onclick="UserExperience.oneClickDemo()" style="flex: 1; padding: 10px; background: linear-gradient(135deg, #00ff00, #00aa00); border: none; border-radius: 8px; color: #000; font-weight: bold; cursor: pointer; font-size: 14px;">
+                            ▶️ 一键演示
+                        </button>
+                        <button onclick="UserExperience.showRecommendedCommands()" style="flex: 1; padding: 10px; background: transparent; border: 2px solid #00ff00; border-radius: 8px; color: #00ff00; cursor: pointer; font-weight: bold; font-size: 14px;">
+                            ⭐ 热门推荐
+                        </button>
+                    </div>
+                    <div style="text-align: center; color: #888; font-size: 12px;">
+                        💡 不知道按哪个？试试上面的按钮！
+                    </div>
+                </div>
+                
                 <div id="buttons-grid">
-                    <!-- 按钮将通过JS动态生成 -->
+                    <!-- 按钮将通过 JS 动态生成 -->
                 </div>
             </aside>
 
@@ -108,6 +136,8 @@
                         <button class="action-btn" onclick="triggerAction('panic')">PANIC BUTTON</button>
                         <button class="action-btn" onclick="triggerAction('glitch')">GLITCH MODE</button>
                         <button class="action-btn" onclick="triggerAction('reboot')">REBOOT SYSTEM</button>
+                        <button class="action-btn" onclick="triggerAction('theme')">CHANGE THEME</button>
+                        <button class="action-btn" onclick="triggerAction('audio')">TOGGLE AUDIO</button>
                     </div>
                 </div>
                 
@@ -155,13 +185,134 @@
         <div class="overlay-content"></div>
     </div>
 
-    <!-- 脚本加载 -->
-    <script src="js/config.js"></script>
+    <!-- 右下角浮动按钮组 -->
+    <div style="position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 9999;">
+        <button onclick="QuestSystem.showQuestPanel()" style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #ff6600, #ff3300); border: none; color: #fff; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 102, 0, 0.4); transition: all 0.3s;" title="任务中心">📋</button>
+        <button onclick="ModernUI.showHelpPanel()" style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #00ff00, #00aa00); border: none; color: #000; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 255, 0, 0.4); transition: all 0.3s;" title="帮助">❓</button>
+        <button onclick="SettingsPanel.showSettingsPanel()" style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #666, #444); border: none; color: #fff; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(100, 100, 100, 0.4); transition: all 0.3s;" title="设置">⚙️</button>
+    </div>
+
+    <!-- 脚本加载：模块化架构 -->
+    <!-- 1. 配置层 -->
+    <script src="js/config/CONFIG.js"></script>
+    
+    <!-- 2. 核心系统层 -->
+    <script src="js/core/EventBus.js"></script>
+    <script src="js/core/Container.js"></script>
+    <script src="js/core/SecurityManager.js"></script>
+    <script src="js/core/Application.js"></script>
+    
+    <!-- 3. 功能模块层 -->
+    <script src="js/ui/UIModule.js"></script>
+    <script src="js/ui/QuickActions.js"></script>
+    <script src="js/ui/ModernUI.js"></script>
+    <script src="js/ui/SettingsPanel.js"></script>
+    <script src="js/ui/CollapsibleUI.js"></script>
+    <script src="js/ui/NotificationSystem.js"></script>
+    <script src="js/effects/EffectsEngine.js"></script>
+    <script src="js/commands/CommandSystem.js"></script>
+    <script src="js/commands/LetterCommands.js"></script>
+    
+    <!-- 4. 系统服务层 -->
+    <script src="js/systems/AudioManager.js"></script>
+    <script src="js/systems/StorageManager.js"></script>
+    <script src="js/systems/ThemeManager.js"></script>
+    <script src="js/systems/UserExperience.js"></script>
+    <script src="js/systems/PerformanceManager.js"></script>
+    <script src="js/systems/QuestSystem.js"></script>
+    
+    <!-- 5. 工具层（保留兼容性） -->
     <script src="js/utils.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/effects.js"></script>
-    <script src="js/simple-commands.js"></script>
-    <script src="js/advanced-commands.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/utils/Optimizer.js"></script>
+    
+    <!-- 6. 测试模块（开发环境） -->
+    <script src="js/tests/test-runner.js"></script>
+    <script src="js/tests/test-optimizations.js"></script>
+    
+    <!-- 7. 旧版兼容（可选，逐步移除） -->
+    <!-- <script src="js/app.js"></script> -->
+    <!-- <script src="js/simple-commands.js"></script> -->
+    <!-- <script src="js/effects.js"></script> -->
+    
+    <!-- 7. PWA Service Worker 注册 -->
+    <script>
+        // 注册 Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful:', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed:', err);
+                    });
+            });
+        }
+        
+        // 检测安装支持
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            showInstallPrompt();
+        });
+        
+        function showInstallPrompt() {
+            const installBtn = document.createElement('button');
+            installBtn.id = 'install-pwa-btn';
+            installBtn.innerHTML = '📲 安装应用';
+            installBtn.style.cssText = `
+                position: fixed;
+                bottom: 100px;
+                right: 20px;
+                padding: 12px 24px;
+                background: linear-gradient(135deg, #00ff00, #00aa00);
+                border: none;
+                border-radius: 25px;
+                color: #000;
+                font-weight: bold;
+                font-size: 14px;
+                cursor: pointer;
+                z-index: 9999;
+                box-shadow: 0 4px 15px rgba(0, 255, 0, 0.4);
+                animation: pulse 2s infinite;
+            `;
+            
+            installBtn.onclick = () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                        }
+                        deferredPrompt = null;
+                        installBtn.remove();
+                    });
+                }
+            };
+            
+            document.body.appendChild(installBtn);
+        }
+        
+        // 监听 Service Worker 更新
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            showUpdatePrompt();
+                        }
+                    });
+                });
+            });
+        }
+        
+        function showUpdatePrompt() {
+            if (confirm('有新版本可用！是否刷新页面以更新？')) {
+                window.location.reload();
+            }
+        }
+    </script>
 </body>
 </html>
