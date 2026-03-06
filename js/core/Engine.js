@@ -126,28 +126,53 @@ class EffectEngine {
     }
 
     /**
-     * 更新 FPS 计数
+     * 更新 FPS 计数（优化版 - 平滑处理）
      */
     updateFPS(currentTime) {
         this.frameCount++;
-        if (currentTime - this.fpsUpdateTime >= 1000) {
-            this.fps = this.frameCount;
+        
+        // 每 0.5 秒更新一次 FPS（更平滑）
+        if (currentTime - this.fpsUpdateTime >= 500) {
+            const instantaneousFPS = this.frameCount / ((currentTime - this.fpsUpdateTime) / 1000);
+            
+            // 移动平均平滑（5 帧窗口）
+            if (!this.fpsHistory) {
+                this.fpsHistory = [];
+            }
+            this.fpsHistory.push(instantaneousFPS);
+            if (this.fpsHistory.length > 5) {
+                this.fpsHistory.shift();
+            }
+            
+            this.fps = this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length;
+            
             this.frameCount = 0;
             this.fpsUpdateTime = currentTime;
             
             // 触发自定义事件
             this.canvas.dispatchEvent(new CustomEvent('fpsUpdate', { 
-                detail: { fps: this.fps } 
+                detail: { fps: Math.round(this.fps) } 
             }));
         }
     }
 
     /**
-     * 清空画布
+     * 清空画布（优化版）
+     * 根据特效需求智能选择清空方式
      */
     clearCanvas() {
-        this.ctx.fillStyle = '#000000';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        // 如果当前特效需要拖尾效果，使用半透明 fillRect
+        if (this.currentEffect && this.currentEffect.needsTrail) {
+            const trailAlpha = this.currentEffect.params.trailAlpha || 0.2;
+            this.ctx.fillStyle = `rgba(0, 0, 0, ${trailAlpha})`;
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        } else {
+            // 否则使用更快的 clearRect
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            // 填充纯黑背景
+            this.ctx.fillStyle = '#000000';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
     }
 
     /**

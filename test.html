@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>性能测试 - Visual Effects Lab</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a1e;
+            color: #ffffff;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #00ffff;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        .test-section {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ffff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .test-section h2 {
+            color: #00ff00;
+            margin-top: 0;
+        }
+        
+        button {
+            background: #00ffff;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            margin: 10px 5px;
+        }
+        
+        button:hover {
+            background: #00ccff;
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        #console {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .log-info { color: #ffffff; }
+        .log-success { color: #00ff00; }
+        .log-error { color: #ff0000; }
+        .log-warning { color: #ffff00; }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ffff, #00ff00);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Visual Effects Lab - 性能测试中心</h1>
+    
+    <div class="test-section">
+        <h2>📊 单元测试</h2>
+        <p>测试核心工具函数和参数验证系统</p>
+        <button onclick="runUnitTests()">运行单元测试</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>🚀 性能基准测试</h2>
+        <p>测试 FPS、内存占用和特效切换延迟</p>
+        <button onclick="runPerformanceTests()">运行性能测试</button>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress" style="width: 0%"></div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📝 测试日志</h2>
+        <div id="console"></div>
+    </div>
+    
+    <!-- 加载必要的脚本 -->
+    <script src="js/utils/ObjectPool.js"></script>
+    <script src="js/ui/Toast.js"></script>
+    <script src="js/core/Utils.js"></script>
+    <script src="js/core/BaseEffect.js"></script>
+    <script src="js/core/Engine.js"></script>
+    
+    <!-- 加载所有特效 -->
+    <script src="js/effects/horizontal/WaveFlow.js"></script>
+    <script src="js/effects/horizontal/ParticleStream.js"></script>
+    <script src="js/effects/horizontal/TextScroll.js"></script>
+    <script src="js/effects/horizontal/ColorBand.js"></script>
+    <script src="js/effects/vertical/RainDrop.js"></script>
+    <script src="js/effects/vertical/CascadeFlow.js"></script>
+    <script src="js/effects/vertical/FallingStars.js"></script>
+    <script src="js/effects/diagonal/DiagonalSlash.js"></script>
+    <script src="js/effects/diagonal/AngularMotion.js"></script>
+    <script src="js/effects/dynamic/PulseWave.js"></script>
+    <script src="js/effects/dynamic/BreathingLight.js"></script>
+    <script src="js/effects/dynamic/MorphingShape.js"></script>
+    
+    <script src="tests/unit/utils.test.js"></script>
+    <script src="tests/unit/BaseEffect.test.js"></script>
+    <script src="tests/performance/benchmark.js"></script>
+    
+    <script>
+        const consoleEl = document.getElementById('console');
+        const progressEl = document.getElementById('progress');
+        
+        // 重写 console.log
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function log(message, type = 'info') {
+            const line = document.createElement('div');
+            line.className = `log-${type}`;
+            line.textContent = message;
+            consoleEl.appendChild(line);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+            originalLog(message);
+        }
+        
+        console.log = function(...args) {
+            log(args.join(' '), 'info');
+            originalLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            log(args.join(' '), 'error');
+            originalError.apply(console, args);
+        };
+        
+        console.warn = function(...args) {
+            log(args.join(' '), 'warning');
+            originalWarn.apply(console, args);
+        };
+        
+        function runUnitTests() {
+            console.log('\n=================================');
+            console.log('🧪 开始运行单元测试...\n');
+            
+            try {
+                // 重新加载测试文件
+                const utilsTest = document.createElement('script');
+                utilsTest.src = 'tests/unit/utils.test.js';
+                document.head.appendChild(utilsTest);
+                
+                const baseEffectTest = document.createElement('script');
+                baseEffectTest.src = 'tests/unit/BaseEffect.test.js';
+                document.head.appendChild(baseEffectTest);
+                
+                console.log('\n✅ 单元测试完成！\n');
+            } catch (error) {
+                console.error(`❌ 测试失败：${error.message}`);
+            }
+        }
+        
+        async function runPerformanceTests() {
+            console.log('\n=================================');
+            console.log('🚀 开始性能基准测试...\n');
+            
+            progressEl.style.width = '10%';
+            
+            // 初始化引擎
+            const canvas = document.createElement('canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            window.engine = new EffectEngine(canvas);
+            
+            // 注册所有特效
+            const effects = [
+                'HorizontalWaveFlow', 'ParticleStream', 'TextScroll', 'ColorBand',
+                'RainDrop', 'CascadeFlow', 'FallingStars',
+                'DiagonalSlash', 'AngularMotion',
+                'PulseWave', 'BreathingLight', 'MorphingShape'
+            ];
+            
+            effects.forEach(name => {
+                window.engine.registerEffect(name, window[name]);
+            });
+            
+            progressEl.style.width = '30%';
+            
+            try {
+                await PerformanceTest.runAll();
+                progressEl.style.width = '100%';
+            } catch (error) {
+                console.error(`❌ 性能测试失败：${error.message}`);
+            }
+        }
+        
+        // 欢迎信息
+        console.log('=================================');
+        console.log('👋 欢迎使用性能测试中心！');
+        console.log('点击上方按钮运行测试');
+        console.log('=================================\n');
+    </script>
+</body>
+</html>

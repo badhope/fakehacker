@@ -59,10 +59,43 @@ class BaseEffect {
     }
 
     /**
-     * 更新参数
+     * 更新参数（带验证）
      */
     updateParams(newParams) {
-        this.params = { ...this.params, ...newParams };
+        const validatedParams = {};
+        
+        for (const [key, value] of Object.entries(newParams)) {
+            const defaultVal = this.defaultParams[key];
+            
+            // 检查参数是否存在于默认参数中
+            if (defaultVal === undefined) {
+                console.warn(`[BaseEffect] 未知参数：${key}`);
+                continue;
+            }
+            
+            // 类型检查
+            if (typeof value !== typeof defaultVal) {
+                console.warn(`[BaseEffect] 参数 ${key} 类型错误：期望 ${typeof defaultVal}，得到 ${typeof value}`);
+                continue;
+            }
+            
+            // 数值验证
+            if (typeof value === 'number') {
+                if (isNaN(value) || !isFinite(value)) {
+                    console.warn(`[BaseEffect] 参数 ${key} 值无效：${value}`);
+                    continue;
+                }
+            }
+            
+            validatedParams[key] = value;
+        }
+        
+        this.params = { ...this.params, ...validatedParams };
+        
+        // 触发参数变化事件
+        if (this.onParamsChange) {
+            this.onParamsChange(validatedParams);
+        }
     }
 
     /**

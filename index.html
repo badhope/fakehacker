@@ -177,11 +177,59 @@
             font-weight: bold;
         }
 
+        /* FPS 计数器颜色编码 */
+        #fps-counter.fps-good {
+            color: #00ff00;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        #fps-counter.fps-warning {
+            color: #ffff00;
+            text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+        }
+
+        #fps-counter.fps-bad {
+            color: #ff0000;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+
+        /* Toast 容器 */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        /* 帮助面板改进 */
+        .help-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 9998;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .help-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
         .help-overlay {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(0.9);
             background: rgba(0, 0, 0, 0.9);
             border: 2px solid #00ffff;
             border-radius: 8px;
@@ -190,6 +238,13 @@
             text-align: center;
             display: none;
             pointer-events: auto;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .help-overlay.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
         }
 
         .help-overlay h2 {
@@ -273,6 +328,8 @@
                 <ul class="effect-list" id="horizontal-effects">
                     <li class="effect-item" data-effect="HorizontalWaveFlow">Wave Flow</li>
                     <li class="effect-item" data-effect="ParticleStream">Particle Stream</li>
+                    <li class="effect-item" data-effect="TextScroll">Text Scroll</li>
+                    <li class="effect-item" data-effect="ColorBand">Color Band</li>
                 </ul>
             </div>
 
@@ -280,6 +337,8 @@
                 <h3>⟳ 纵向排列</h3>
                 <ul class="effect-list" id="vertical-effects">
                     <li class="effect-item" data-effect="RainDrop">Rain Drop</li>
+                    <li class="effect-item" data-effect="CascadeFlow">Cascade Flow</li>
+                    <li class="effect-item" data-effect="FallingStars">Falling Stars</li>
                 </ul>
             </div>
 
@@ -287,6 +346,7 @@
                 <h3>⤡ 斜向排列</h3>
                 <ul class="effect-list" id="diagonal-effects">
                     <li class="effect-item" data-effect="DiagonalSlash">Diagonal Slash</li>
+                    <li class="effect-item" data-effect="AngularMotion">Angular Motion</li>
                 </ul>
             </div>
 
@@ -294,6 +354,8 @@
                 <h3>⟳ 动态变化</h3>
                 <ul class="effect-list" id="dynamic-effects">
                     <li class="effect-item" data-effect="PulseWave">Pulse Wave</li>
+                    <li class="effect-item" data-effect="BreathingLight">Breathing Light</li>
+                    <li class="effect-item" data-effect="MorphingShape">Morphing Shape</li>
                 </ul>
             </div>
 
@@ -311,6 +373,7 @@
             <div class="status-item">按 <kbd>H</kbd> 查看帮助</div>
         </div>
 
+        <div class="help-backdrop" id="help-backdrop" onclick="toggleHelp()"></div>
         <div class="help-overlay" id="help-overlay">
             <h2>📖 操作指南</h2>
             <ul>
@@ -326,6 +389,8 @@
     </div>
 
     <!-- 脚本加载 -->
+    <script src="js/utils/ObjectPool.js"></script>
+    <script src="js/ui/Toast.js"></script>
     <script src="js/core/Utils.js"></script>
     <script src="js/core/BaseEffect.js"></script>
     <script src="js/core/Engine.js"></script>
@@ -339,9 +404,12 @@
     
     <!-- 斜向特效 -->
     <script src="js/effects/diagonal/DiagonalSlash.js"></script>
+    <script src="js/effects/diagonal/AngularMotion.js"></script>
     
     <!-- 动态特效 -->
     <script src="js/effects/dynamic/PulseWave.js"></script>
+    <script src="js/effects/dynamic/BreathingLight.js"></script>
+    <script src="js/effects/dynamic/MorphingShape.js"></script>
 
     <script>
         // 全局变量
@@ -350,9 +418,16 @@
         const effectNames = [
             'HorizontalWaveFlow',
             'ParticleStream',
+            'TextScroll',
+            'ColorBand',
             'RainDrop',
+            'CascadeFlow',
+            'FallingStars',
             'DiagonalSlash',
-            'PulseWave'
+            'AngularMotion',
+            'PulseWave',
+            'BreathingLight',
+            'MorphingShape'
         ];
         let effectIndex = 0;
 
@@ -364,13 +439,37 @@
             // 注册所有特效
             engine.registerEffect('HorizontalWaveFlow', HorizontalWaveFlow);
             engine.registerEffect('ParticleStream', ParticleStream);
+            engine.registerEffect('TextScroll', TextScroll);
+            engine.registerEffect('ColorBand', ColorBand);
             engine.registerEffect('RainDrop', RainDrop);
+            engine.registerEffect('CascadeFlow', CascadeFlow);
+            engine.registerEffect('FallingStars', FallingStars);
             engine.registerEffect('DiagonalSlash', DiagonalSlash);
+            engine.registerEffect('AngularMotion', AngularMotion);
             engine.registerEffect('PulseWave', PulseWave);
+            engine.registerEffect('BreathingLight', BreathingLight);
+            engine.registerEffect('MorphingShape', MorphingShape);
 
-            // FPS 更新监听
+            // FPS 更新监听（带颜色编码）
             canvas.addEventListener('fpsUpdate', (e) => {
-                document.getElementById('fps-counter').textContent = e.detail.fps;
+                const fpsEl = document.getElementById('fps-counter');
+                const fps = e.detail.fps;
+                fpsEl.textContent = fps;
+                
+                // 更新颜色
+                fpsEl.className = '';
+                if (fps >= 50) {
+                    fpsEl.classList.add('fps-good');
+                } else if (fps >= 30) {
+                    fpsEl.classList.add('fps-warning');
+                } else {
+                    fpsEl.classList.add('fps-bad');
+                    // 低 FPS 警告（只提示一次）
+                    if (!this.lowFpsWarned) {
+                        Toast.warning(`当前 FPS: ${fps}，性能可能不足`);
+                        this.lowFpsWarned = true;
+                    }
+                }
             });
 
             // 加载第一个特效
@@ -378,22 +477,27 @@
         }
 
         // 加载特效
-        function loadEffect(effectName) {
+        async function loadEffect(effectName) {
             if (engine) {
-                engine.loadEffect(effectName);
-                currentEffectName = effectName;
-                document.getElementById('current-effect').textContent = effectName;
-                
-                // 更新 UI
-                document.querySelectorAll('.effect-item').forEach(item => {
-                    item.classList.remove('active');
-                    if (item.dataset.effect === effectName) {
-                        item.classList.add('active');
-                    }
-                });
+                const success = await engine.loadEffect(effectName);
+                if (success) {
+                    currentEffectName = effectName;
+                    document.getElementById('current-effect').textContent = effectName;
+                    
+                    // 更新 UI
+                    document.querySelectorAll('.effect-item').forEach(item => {
+                        item.classList.remove('active');
+                        if (item.dataset.effect === effectName) {
+                            item.classList.add('active');
+                        }
+                    });
 
-                // 生成参数控制面板
-                generateParamControls(effectName);
+                    // 生成参数控制面板
+                    generateParamControls(effectName);
+                    
+                    // 显示提示
+                    Toast.success(`已加载：${effectName}`);
+                }
             }
         }
 
@@ -413,10 +517,23 @@
                     const control = document.createElement('div');
                     control.className = 'param-control';
                     
+                    // 标签和数值显示
+                    const labelRow = document.createElement('div');
+                    labelRow.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;';
+                    
                     const label = document.createElement('label');
                     label.textContent = key;
-                    control.appendChild(label);
+                    label.style.cssText = 'font-size: 12px; color: #ccc;';
+                    
+                    const valueDisplay = document.createElement('span');
+                    valueDisplay.textContent = value.toFixed(2);
+                    valueDisplay.style.cssText = 'font-size: 11px; color: #00ffff; font-family: monospace;';
+                    
+                    labelRow.appendChild(label);
+                    labelRow.appendChild(valueDisplay);
+                    control.appendChild(labelRow);
 
+                    // 滑块
                     const slider = document.createElement('input');
                     slider.type = 'range';
                     slider.min = 0;
@@ -424,6 +541,15 @@
                     slider.value = 50;
                     slider.oninput = (e) => {
                         const newValue = parseFloat(e.target.value);
+                        valueDisplay.textContent = newValue.toFixed(2);
+                        
+                        // 高亮变化
+                        control.style.transition = 'background-color 0.3s';
+                        control.style.backgroundColor = 'rgba(0, 255, 255, 0.1)';
+                        setTimeout(() => {
+                            control.style.backgroundColor = '';
+                        }, 300);
+                        
                         if (engine.currentEffect) {
                             engine.currentEffect.updateParams({
                                 [key]: newValue
@@ -431,6 +557,30 @@
                         }
                     };
                     control.appendChild(slider);
+                    
+                    // 重置按钮
+                    const resetBtn = document.createElement('button');
+                    resetBtn.textContent = '重置';
+                    resetBtn.style.cssText = `
+                        margin-top: 5px;
+                        padding: 4px 12px;
+                        background: transparent;
+                        border: 1px solid #00ffff;
+                        color: #00ffff;
+                        border-radius: 3px;
+                        cursor: pointer;
+                        font-size: 11px;
+                    `;
+                    resetBtn.onmouseover = () => resetBtn.style.background = '#00ffff';
+                    resetBtn.onmouseout = () => resetBtn.style.background = 'transparent';
+                    resetBtn.onclick = () => {
+                        if (engine.currentEffect) {
+                            engine.currentEffect.updateParams({ [key]: value });
+                            slider.value = 50;
+                            valueDisplay.textContent = value.toFixed(2);
+                        }
+                    };
+                    control.appendChild(resetBtn);
 
                     container.appendChild(control);
                 }
@@ -449,10 +599,29 @@
             loadEffect(effectNames[effectIndex]);
         }
 
-        // 切换帮助
+        // 切换帮助（带动画）
         function toggleHelp() {
             const overlay = document.getElementById('help-overlay');
-            overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+            const backdrop = document.getElementById('help-backdrop');
+            
+            if (overlay.style.display === 'block') {
+                // 隐藏
+                overlay.classList.remove('active');
+                backdrop.classList.remove('active');
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    backdrop.style.display = 'none';
+                }, 300);
+            } else {
+                // 显示
+                overlay.style.display = 'block';
+                backdrop.style.display = 'block';
+                // 强制重绘
+                requestAnimationFrame(() => {
+                    overlay.classList.add('active');
+                    backdrop.classList.add('active');
+                });
+            }
         }
 
         // 键盘事件
