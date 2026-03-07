@@ -3,19 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Visual Effects Lab - 代码生成的视觉特效展示平台">
+    <meta name="theme-color" content="#0a0a1e">
     <title>Visual Effects Lab - 特效实验室</title>
     <style>
+        /* CSS 变量系统 */
+        :root {
+            /* 主色调 */
+            --primary-cyan: #00ffff;
+            --primary-green: #00ff00;
+            --primary-blue: #0088ff;
+            
+            /* 强调色 */
+            --accent-purple: #ff00ff;
+            --accent-orange: #ff8800;
+            --accent-red: #ff0044;
+            
+            /* 中性色 */
+            --bg-dark: #0a0a1e;
+            --bg-darker: #050510;
+            --bg-panel: rgba(10, 10, 30, 0.95);
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --text-muted: #666666;
+            
+            /* 功能色 */
+            --success: #00ff88;
+            --warning: #ffcc00;
+            --error: #ff4466;
+            --info: #00ffff;
+            
+            /* 缓动函数 */
+            --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+            --ease-in-out-quad: cubic-bezier(0.45, 0, 0.55, 1);
+            --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            
+            /* 层级系统 */
+            --z-canvas: 0;
+            --z-ui-overlay: 10;
+            --z-header: 20;
+            --z-control-panel: 30;
+            --z-modal: 100;
+            --z-toast: 1000;
+            
+            /* 尺寸变量 */
+            --sidebar-width: 300px;
+            --header-height: auto;
+            --status-bar-height: auto;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             font-family: 'Courier New', monospace;
-            background: #000000;
-            color: #ffffff;
-            overflow: hidden;
+            background: var(--bg-dark);
+            color: var(--text-primary);
         }
 
         #canvas {
@@ -24,7 +76,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 0;
+            z-index: var(--z-canvas);
+            background: #000000;
         }
 
         .ui-overlay {
@@ -33,53 +86,73 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 10;
+            z-index: var(--z-ui-overlay);
             pointer-events: none;
+            display: grid;
+            grid-template-areas:
+                "header header"
+                "sidebar canvas"
+                "status status";
+            grid-template-columns: var(--sidebar-width) 1fr;
+            grid-template-rows: auto 1fr auto;
         }
 
         .header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
+            grid-area: header;
+            position: relative;
             padding: 20px;
-            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+            background: linear-gradient(
+                180deg,
+                rgba(0, 0, 0, 0.9) 0%,
+                rgba(0, 0, 0, 0.7) 50%,
+                transparent 100%
+            );
             pointer-events: auto;
+            z-index: var(--z-header);
+            backdrop-filter: blur(4px);
         }
 
         .header h1 {
             font-size: 24px;
-            color: #00ffff;
+            color: var(--primary-cyan);
             text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
             letter-spacing: 4px;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
 
         .header p {
             font-size: 12px;
-            color: #888;
-            margin-top: 5px;
+            color: var(--text-secondary);
+            opacity: 0.8;
         }
 
         .control-panel {
-            position: absolute;
-            left: 20px;
-            top: 100px;
-            width: 250px;
-            background: rgba(10, 10, 30, 0.9);
-            border: 1px solid #00ffff;
-            border-radius: 4px;
+            grid-area: sidebar;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-panel);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(0, 255, 255, 0.3);
             padding: 20px;
             pointer-events: auto;
-            max-height: calc(100vh - 200px);
             overflow-y: auto;
+            overflow-x: hidden;
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.1),
+                0 4px 8px rgba(0, 0, 0, 0.15),
+                0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: var(--z-control-panel);
         }
 
         .control-panel h2 {
             font-size: 16px;
-            color: #00ffff;
+            color: var(--primary-cyan);
             margin-bottom: 15px;
-            border-bottom: 1px solid #00ffff;
+            border-bottom: 1px solid var(--primary-cyan);
             padding-bottom: 10px;
+            font-weight: bold;
         }
 
         .effect-category {
@@ -88,12 +161,42 @@
 
         .effect-category h3 {
             font-size: 14px;
-            color: #00ff00;
+            color: var(--primary-green);
             margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s var(--ease-out-expo);
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .effect-category h3:hover {
+            color: var(--primary-cyan);
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        .effect-category h3::after {
+            content: '▼';
+            font-size: 10px;
+            transition: transform 0.3s var(--ease-out-expo);
+        }
+
+        .effect-category.collapsed h3::after {
+            transform: rotate(-90deg);
         }
 
         .effect-list {
             list-style: none;
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.3s var(--ease-out-expo), margin 0.3s var(--ease-out-expo);
+        }
+
+        .effect-category.collapsed .effect-list {
+            max-height: 0;
+            margin-bottom: 0;
         }
 
         .effect-item {
@@ -103,26 +206,29 @@
             border: 1px solid transparent;
             border-radius: 4px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s var(--ease-out-expo);
             font-size: 13px;
+            color: var(--text-secondary);
         }
 
         .effect-item:hover {
             background: rgba(0, 255, 255, 0.2);
-            border-color: #00ffff;
+            border-color: var(--primary-cyan);
             transform: translateX(5px);
+            color: var(--text-primary);
         }
 
         .effect-item.active {
             background: rgba(0, 255, 255, 0.3);
-            border-color: #00ffff;
+            border-color: var(--primary-cyan);
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            color: var(--text-primary);
         }
 
         .params-panel {
             margin-top: 20px;
             padding-top: 20px;
-            border-top: 1px solid #333;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .param-control {
@@ -132,7 +238,7 @@
         .param-control label {
             display: block;
             font-size: 12px;
-            color: #ccc;
+            color: var(--text-secondary);
             margin-bottom: 5px;
         }
 
@@ -143,16 +249,22 @@
             border-radius: 3px;
             outline: none;
             -webkit-appearance: none;
+            cursor: pointer;
         }
 
         .param-control input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 16px;
             height: 16px;
-            background: #00ffff;
+            background: var(--primary-cyan);
             border-radius: 50%;
             cursor: pointer;
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            transition: transform 0.2s;
+        }
+
+        .param-control input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
         }
 
         .status-bar {
@@ -161,44 +273,55 @@
             left: 20px;
             padding: 10px 20px;
             background: rgba(10, 10, 30, 0.9);
-            border: 1px solid #00ffff;
+            border: 1px solid var(--primary-cyan);
             border-radius: 4px;
             font-size: 12px;
+            backdrop-filter: blur(4px);
+            z-index: var(--z-header);
         }
 
         .status-item {
             display: inline-block;
             margin-right: 20px;
-            color: #00ff00;
+            color: var(--primary-green);
         }
 
         .status-item span {
-            color: #00ffff;
+            color: var(--primary-cyan);
             font-weight: bold;
+        }
+
+        .status-item kbd {
+            background: rgba(0, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: var(--primary-cyan);
+            font-family: monospace;
+            border: 1px solid rgba(0, 255, 255, 0.3);
         }
 
         /* FPS 计数器颜色编码 */
         #fps-counter.fps-good {
-            color: #00ff00;
+            color: var(--primary-green);
             text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
         }
 
         #fps-counter.fps-warning {
-            color: #ffff00;
+            color: var(--warning);
             text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
         }
 
         #fps-counter.fps-bad {
-            color: #ff0000;
+            color: var(--error);
             text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
         }
 
-        /* Toast 容器 */
+        /* Toast 容器样式 */
         .toast-container {
             position: fixed;
             top: 20px;
             right: 20px;
-            z-index: 10000;
+            z-index: var(--z-toast);
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -214,10 +337,10 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(4px);
-            z-index: 9998;
+            z-index: calc(var(--z-modal) - 1);
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.3s var(--ease-out-quad);
         }
 
         .help-backdrop.active {
@@ -230,16 +353,18 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.9);
-            background: rgba(0, 0, 0, 0.9);
-            border: 2px solid #00ffff;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid var(--primary-cyan);
             border-radius: 8px;
             padding: 30px;
             max-width: 500px;
+            width: 90%;
             text-align: center;
             display: none;
             pointer-events: auto;
             opacity: 0;
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            transition: opacity 0.3s var(--ease-out-quad), transform 0.3s var(--ease-out-quad);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
         .help-overlay.active {
@@ -248,57 +373,72 @@
         }
 
         .help-overlay h2 {
-            color: #00ffff;
+            color: var(--primary-cyan);
             margin-bottom: 20px;
+            font-size: 20px;
         }
 
         .help-overlay ul {
             text-align: left;
             margin: 20px 0;
             list-style: none;
+            padding: 0;
         }
 
         .help-overlay li {
             margin: 10px 0;
-            color: #ccc;
+            color: var(--text-secondary);
+            font-size: 14px;
         }
 
         .help-overlay kbd {
-            background: #333;
+            background: rgba(0, 255, 255, 0.2);
             padding: 4px 8px;
             border-radius: 4px;
-            color: #00ffff;
+            color: var(--primary-cyan);
             font-family: monospace;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            display: inline-block;
+            margin: 0 4px;
         }
 
         .help-overlay button {
             margin-top: 20px;
             padding: 10px 30px;
-            background: #00ffff;
+            background: var(--primary-cyan);
             color: #000;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
             font-size: 14px;
+            transition: all 0.3s var(--ease-out-expo);
         }
 
         .help-overlay button:hover {
             background: #00ccff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 255, 0.4);
         }
 
-        /* 滚动条样式 */
+        /* 滚动条样式优化 */
         .control-panel::-webkit-scrollbar {
             width: 8px;
         }
 
         .control-panel::-webkit-scrollbar-track {
             background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
         }
 
         .control-panel::-webkit-scrollbar-thumb {
-            background: #00ffff;
+            background: var(--primary-cyan);
             border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        .control-panel::-webkit-scrollbar-thumb:hover {
+            background: #00ccff;
         }
 
         /* 全屏模式 */
@@ -308,6 +448,83 @@
 
         body.fullscreen #canvas {
             cursor: none;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 100%;
+            }
+
+            .ui-overlay {
+                grid-template-columns: 1fr;
+            }
+
+            .control-panel {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                width: 85%;
+                max-width: 320px;
+                transform: translateX(-100%);
+                transition: transform 0.3s var(--ease-out-expo);
+                z-index: 200;
+            }
+
+            .control-panel.open {
+                transform: translateX(0);
+            }
+
+            .header {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .status-bar {
+                bottom: 10px;
+                left: 10px;
+                right: 10px;
+                font-size: 11px;
+                padding: 8px 12px;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+                position: fixed;
+                top: 15px;
+                right: 15px;
+                z-index: 300;
+                background: rgba(0, 255, 255, 0.2);
+                border: 2px solid var(--primary-cyan);
+                color: var(--primary-cyan);
+                padding: 8px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 18px;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1200px) {
+            :root {
+                --sidebar-width: 280px;
+            }
+        }
+
+        @media (min-width: 1201px) {
+            :root {
+                --sidebar-width: 320px;
+            }
+        }
+
+        /* 打印样式 */
+        @media print {
+            .ui-overlay {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -362,7 +579,7 @@
             <div class="params-panel" id="params-panel">
                 <h2>🎛️ 参数控制</h2>
                 <div id="param-controls">
-                    <p style="color: #666; font-size: 12px;">选择一个特效以调节参数</p>
+                    <p style="color: var(--text-muted); font-size: 12px;">选择一个特效以调节参数</p>
                 </div>
             </div>
         </aside>
@@ -388,6 +605,9 @@
         </div>
     </div>
 
+    <!-- 移动端菜单按钮 -->
+    <button class="mobile-menu-toggle" id="mobile-menu-toggle" style="display: none;" onclick="toggleMobileMenu()">☰</button>
+
     <!-- 脚本加载 -->
     <script src="js/utils/ObjectPool.js"></script>
     <script src="js/ui/Toast.js"></script>
@@ -398,9 +618,13 @@
     <!-- 横向特效 -->
     <script src="js/effects/horizontal/WaveFlow.js"></script>
     <script src="js/effects/horizontal/ParticleStream.js"></script>
+    <script src="js/effects/horizontal/TextScroll.js"></script>
+    <script src="js/effects/horizontal/ColorBand.js"></script>
     
     <!-- 纵向特效 -->
     <script src="js/effects/vertical/RainDrop.js"></script>
+    <script src="js/effects/vertical/CascadeFlow.js"></script>
+    <script src="js/effects/vertical/FallingStars.js"></script>
     
     <!-- 斜向特效 -->
     <script src="js/effects/diagonal/DiagonalSlash.js"></script>
@@ -430,73 +654,115 @@
             'MorphingShape'
         ];
         let effectIndex = 0;
+        let lowFpsWarned = false;
 
         // 初始化引擎
         function initEngine() {
-            const canvas = document.getElementById('canvas');
-            engine = new EffectEngine(canvas);
-
-            // 注册所有特效
-            engine.registerEffect('HorizontalWaveFlow', HorizontalWaveFlow);
-            engine.registerEffect('ParticleStream', ParticleStream);
-            engine.registerEffect('TextScroll', TextScroll);
-            engine.registerEffect('ColorBand', ColorBand);
-            engine.registerEffect('RainDrop', RainDrop);
-            engine.registerEffect('CascadeFlow', CascadeFlow);
-            engine.registerEffect('FallingStars', FallingStars);
-            engine.registerEffect('DiagonalSlash', DiagonalSlash);
-            engine.registerEffect('AngularMotion', AngularMotion);
-            engine.registerEffect('PulseWave', PulseWave);
-            engine.registerEffect('BreathingLight', BreathingLight);
-            engine.registerEffect('MorphingShape', MorphingShape);
-
-            // FPS 更新监听（带颜色编码）
-            canvas.addEventListener('fpsUpdate', (e) => {
-                const fpsEl = document.getElementById('fps-counter');
-                const fps = e.detail.fps;
-                fpsEl.textContent = fps;
-                
-                // 更新颜色
-                fpsEl.className = '';
-                if (fps >= 50) {
-                    fpsEl.classList.add('fps-good');
-                } else if (fps >= 30) {
-                    fpsEl.classList.add('fps-warning');
-                } else {
-                    fpsEl.classList.add('fps-bad');
-                    // 低 FPS 警告（只提示一次）
-                    if (!this.lowFpsWarned) {
-                        Toast.warning(`当前 FPS: ${fps}，性能可能不足`);
-                        this.lowFpsWarned = true;
-                    }
+            try {
+                const canvas = document.getElementById('canvas');
+                if (!canvas) {
+                    console.error('Canvas 元素不存在');
+                    Toast.error('Canvas 元素不存在');
+                    return;
                 }
-            });
+                
+                engine = new EffectEngine(canvas);
 
-            // 加载第一个特效
-            loadEffect(effectNames[0]);
+                // 注册所有特效
+                const effectsToRegister = [
+                    { name: 'HorizontalWaveFlow', effect: HorizontalWaveFlow },
+                    { name: 'ParticleStream', effect: ParticleStream },
+                    { name: 'TextScroll', effect: TextScroll },
+                    { name: 'ColorBand', effect: ColorBand },
+                    { name: 'RainDrop', effect: RainDrop },
+                    { name: 'CascadeFlow', effect: CascadeFlow },
+                    { name: 'FallingStars', effect: FallingStars },
+                    { name: 'DiagonalSlash', effect: DiagonalSlash },
+                    { name: 'AngularMotion', effect: AngularMotion },
+                    { name: 'PulseWave', effect: PulseWave },
+                    { name: 'BreathingLight', effect: BreathingLight },
+                    { name: 'MorphingShape', effect: MorphingShape }
+                ];
+
+                effectsToRegister.forEach(({ name, effect }) => {
+                    try {
+                        if (effect) {
+                            engine.registerEffect(name, effect);
+                        } else {
+                            console.warn(`特效 ${name} 未定义`);
+                        }
+                    } catch (error) {
+                        console.error(`注册特效 ${name} 失败:`, error);
+                    }
+                });
+
+                // FPS 更新监听（带颜色编码）
+                canvas.addEventListener('fpsUpdate', (e) => {
+                    try {
+                        const fpsEl = document.getElementById('fps-counter');
+                        if (fpsEl) {
+                            const fps = e.detail.fps;
+                            fpsEl.textContent = fps;
+                            
+                            // 更新颜色
+                            fpsEl.className = '';
+                            if (fps >= 50) {
+                                fpsEl.classList.add('fps-good');
+                            } else if (fps >= 30) {
+                                fpsEl.classList.add('fps-warning');
+                            } else {
+                                fpsEl.classList.add('fps-bad');
+                                // 低 FPS 警告（只提示一次）
+                                if (!lowFpsWarned) {
+                                    Toast.warning(`当前 FPS: ${fps}，性能可能不足`);
+                                    lowFpsWarned = true;
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error('更新 FPS 显示失败:', error);
+                    }
+                });
+
+                // 加载第一个特效
+                if (effectNames.length > 0) {
+                    loadEffect(effectNames[0]);
+                } else {
+                    console.error('无特效可用');
+                    Toast.error('无特效可用');
+                }
+            } catch (error) {
+                console.error('初始化引擎失败:', error);
+                Toast.error(`初始化引擎失败：${error.message}`);
+            }
         }
 
         // 加载特效
         async function loadEffect(effectName) {
             if (engine) {
-                const success = await engine.loadEffect(effectName);
-                if (success) {
-                    currentEffectName = effectName;
-                    document.getElementById('current-effect').textContent = effectName;
-                    
-                    // 更新 UI
-                    document.querySelectorAll('.effect-item').forEach(item => {
-                        item.classList.remove('active');
-                        if (item.dataset.effect === effectName) {
-                            item.classList.add('active');
-                        }
-                    });
+                try {
+                    const success = await engine.loadEffect(effectName);
+                    if (success) {
+                        currentEffectName = effectName;
+                        document.getElementById('current-effect').textContent = effectName;
+                        
+                        // 更新 UI
+                        document.querySelectorAll('.effect-item').forEach(item => {
+                            item.classList.remove('active');
+                            if (item.dataset.effect === effectName) {
+                                item.classList.add('active');
+                            }
+                        });
 
-                    // 生成参数控制面板
-                    generateParamControls(effectName);
-                    
-                    // 显示提示
-                    Toast.success(`已加载：${effectName}`);
+                        // 生成参数控制面板
+                        generateParamControls(effectName);
+                        
+                        // 显示提示
+                        Toast.success(`已加载：${effectName}`);
+                    }
+                } catch (error) {
+                    console.error('加载特效失败:', error);
+                    Toast.error(`加载特效失败：${error.message}`);
                 }
             }
         }
@@ -506,84 +772,120 @@
             const container = document.getElementById('param-controls');
             container.innerHTML = '';
 
-            const effectClass = window[effectName];
-            if (!effectClass) return;
-
-            const instance = new effectClass(engine.canvas);
-            const params = instance.defaultParams;
-
-            for (const [key, value] of Object.entries(params)) {
-                if (typeof value === 'number') {
-                    const control = document.createElement('div');
-                    control.className = 'param-control';
-                    
-                    // 标签和数值显示
-                    const labelRow = document.createElement('div');
-                    labelRow.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;';
-                    
-                    const label = document.createElement('label');
-                    label.textContent = key;
-                    label.style.cssText = 'font-size: 12px; color: #ccc;';
-                    
-                    const valueDisplay = document.createElement('span');
-                    valueDisplay.textContent = value.toFixed(2);
-                    valueDisplay.style.cssText = 'font-size: 11px; color: #00ffff; font-family: monospace;';
-                    
-                    labelRow.appendChild(label);
-                    labelRow.appendChild(valueDisplay);
-                    control.appendChild(labelRow);
-
-                    // 滑块
-                    const slider = document.createElement('input');
-                    slider.type = 'range';
-                    slider.min = 0;
-                    slider.max = 100;
-                    slider.value = 50;
-                    slider.oninput = (e) => {
-                        const newValue = parseFloat(e.target.value);
-                        valueDisplay.textContent = newValue.toFixed(2);
-                        
-                        // 高亮变化
-                        control.style.transition = 'background-color 0.3s';
-                        control.style.backgroundColor = 'rgba(0, 255, 255, 0.1)';
-                        setTimeout(() => {
-                            control.style.backgroundColor = '';
-                        }, 300);
-                        
-                        if (engine.currentEffect) {
-                            engine.currentEffect.updateParams({
-                                [key]: newValue
-                            });
-                        }
-                    };
-                    control.appendChild(slider);
-                    
-                    // 重置按钮
-                    const resetBtn = document.createElement('button');
-                    resetBtn.textContent = '重置';
-                    resetBtn.style.cssText = `
-                        margin-top: 5px;
-                        padding: 4px 12px;
-                        background: transparent;
-                        border: 1px solid #00ffff;
-                        color: #00ffff;
-                        border-radius: 3px;
-                        cursor: pointer;
-                        font-size: 11px;
-                    `;
-                    resetBtn.onmouseover = () => resetBtn.style.background = '#00ffff';
-                    resetBtn.onmouseout = () => resetBtn.style.background = 'transparent';
-                    resetBtn.onclick = () => {
-                        if (engine.currentEffect) {
-                            engine.currentEffect.updateParams({ [key]: value });
-                            slider.value = 50;
-                            valueDisplay.textContent = value.toFixed(2);
-                        }
-                    };
-                    control.appendChild(resetBtn);
-
-                    container.appendChild(control);
+            try {
+                const effectClass = window[effectName];
+                if (!effectClass) {
+                    container.innerHTML = '<p style="color: var(--error); font-size: 12px;">特效类不存在</p>';
+                    return;
                 }
+
+                const instance = new effectClass(engine.canvas);
+                const params = instance.defaultParams;
+
+                if (!params || Object.keys(params).length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted); font-size: 12px;">该特效无参数可调节</p>';
+                    return;
+                }
+
+                let hasControls = false;
+                for (const [key, value] of Object.entries(params)) {
+                    if (typeof value === 'number') {
+                        hasControls = true;
+                        const control = document.createElement('div');
+                        control.className = 'param-control';
+                        
+                        // 标签和数值显示
+                        const labelRow = document.createElement('div');
+                        labelRow.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;';
+                        
+                        const label = document.createElement('label');
+                        label.textContent = key;
+                        label.style.cssText = 'font-size: 12px; color: var(--text-secondary);';
+                        
+                        const valueDisplay = document.createElement('span');
+                        valueDisplay.textContent = value.toFixed(2);
+                        valueDisplay.style.cssText = 'font-size: 11px; color: var(--primary-cyan); font-family: monospace;';
+                        
+                        labelRow.appendChild(label);
+                        labelRow.appendChild(valueDisplay);
+                        control.appendChild(labelRow);
+
+                        // 滑块
+                        const slider = document.createElement('input');
+                        slider.type = 'range';
+                        slider.min = 0;
+                        slider.max = 100;
+                        slider.value = 50;
+                        slider.oninput = (e) => {
+                            try {
+                                const newValue = parseFloat(e.target.value);
+                                valueDisplay.textContent = newValue.toFixed(2);
+                                
+                                // 高亮变化
+                                control.style.transition = 'background-color 0.3s';
+                                control.style.backgroundColor = 'rgba(0, 255, 255, 0.1)';
+                                setTimeout(() => {
+                                    control.style.backgroundColor = '';
+                                }, 300);
+                                
+                                if (engine.currentEffect) {
+                                    engine.currentEffect.updateParams({
+                                        [key]: newValue
+                                    });
+                                }
+                            } catch (error) {
+                                console.error('更新参数失败:', error);
+                                Toast.error('更新参数失败');
+                            }
+                        };
+                        control.appendChild(slider);
+                        
+                        // 重置按钮
+                        const resetBtn = document.createElement('button');
+                        resetBtn.textContent = '重置';
+                        resetBtn.style.cssText = `
+                            margin-top: 5px;
+                            padding: 4px 12px;
+                            background: transparent;
+                            border: 1px solid var(--primary-cyan);
+                            color: var(--primary-cyan);
+                            border-radius: 3px;
+                            cursor: pointer;
+                            font-size: 11px;
+                            transition: all 0.3s;
+                        `;
+                        resetBtn.onmouseover = () => {
+                            resetBtn.style.background = 'var(--primary-cyan)';
+                            resetBtn.style.color = '#000';
+                        };
+                        resetBtn.onmouseout = () => {
+                            resetBtn.style.background = 'transparent';
+                            resetBtn.style.color = 'var(--primary-cyan)';
+                        };
+                        resetBtn.onclick = () => {
+                            try {
+                                if (engine.currentEffect) {
+                                    engine.currentEffect.updateParams({ [key]: value });
+                                    slider.value = 50;
+                                    valueDisplay.textContent = value.toFixed(2);
+                                }
+                            } catch (error) {
+                                console.error('重置参数失败:', error);
+                                Toast.error('重置参数失败');
+                            }
+                        };
+                        control.appendChild(resetBtn);
+
+                        container.appendChild(control);
+                    }
+                }
+
+                if (!hasControls) {
+                    container.innerHTML = '<p style="color: var(--text-muted); font-size: 12px;">该特效无参数可调节</p>';
+                }
+            } catch (error) {
+                console.error('生成参数控制面板失败:', error);
+                container.innerHTML = '<p style="color: var(--error); font-size: 12px;">生成参数控制面板失败</p>';
             }
         }
 
@@ -601,31 +903,62 @@
 
         // 切换帮助（带动画）
         function toggleHelp() {
-            const overlay = document.getElementById('help-overlay');
-            const backdrop = document.getElementById('help-backdrop');
-            
-            if (overlay.style.display === 'block') {
-                // 隐藏
-                overlay.classList.remove('active');
-                backdrop.classList.remove('active');
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    backdrop.style.display = 'none';
-                }, 300);
-            } else {
-                // 显示
-                overlay.style.display = 'block';
-                backdrop.style.display = 'block';
-                // 强制重绘
-                requestAnimationFrame(() => {
-                    overlay.classList.add('active');
-                    backdrop.classList.add('active');
-                });
+            try {
+                const overlay = document.getElementById('help-overlay');
+                const backdrop = document.getElementById('help-backdrop');
+                
+                if (!overlay || !backdrop) {
+                    console.error('帮助面板元素不存在');
+                    return;
+                }
+                
+                if (overlay.style.display === 'block' && overlay.classList.contains('active')) {
+                    // 隐藏
+                    overlay.classList.remove('active');
+                    backdrop.classList.remove('active');
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                        backdrop.style.display = 'none';
+                    }, 300);
+                } else {
+                    // 显示
+                    overlay.style.display = 'block';
+                    backdrop.style.display = 'block';
+                    // 强制重绘
+                    requestAnimationFrame(() => {
+                        overlay.classList.add('active');
+                        backdrop.classList.add('active');
+                    });
+                }
+            } catch (error) {
+                console.error('切换帮助面板失败:', error);
+                Toast.error('切换帮助面板失败');
+            }
+        }
+
+        // 移动端菜单切换
+        function toggleMobileMenu() {
+            const panel = document.querySelector('.control-panel');
+            if (panel) {
+                panel.classList.toggle('open');
             }
         }
 
         // 键盘事件
         document.addEventListener('keydown', (e) => {
+            // 如果帮助面板打开，ESC 关闭帮助
+            if (e.key === 'Escape') {
+                const overlay = document.getElementById('help-overlay');
+                if (overlay && overlay.style.display === 'block') {
+                    toggleHelp();
+                }
+                document.body.classList.remove('fullscreen');
+                // 移动端关闭侧边栏
+                document.querySelector('.control-panel')?.classList.remove('open');
+                return;
+            }
+
+            // 其他快捷键
             switch(e.key) {
                 case 'ArrowLeft':
                     prevEffect();
@@ -651,32 +984,80 @@
                 case 'H':
                     toggleHelp();
                     break;
-                case 'Escape':
-                    document.getElementById('help-overlay').style.display = 'none';
-                    document.body.classList.remove('fullscreen');
-                    break;
             }
         });
 
         // 点击特效列表
         document.querySelectorAll('.effect-item').forEach(item => {
             item.addEventListener('click', () => {
-                const effectName = item.dataset.effect;
-                const index = effectNames.indexOf(effectName);
-                if (index !== -1) {
-                    effectIndex = index;
-                    loadEffect(effectName);
+                try {
+                    const effectName = item.dataset.effect;
+                    if (effectName) {
+                        const index = effectNames.indexOf(effectName);
+                        if (index !== -1) {
+                            effectIndex = index;
+                            loadEffect(effectName);
+                            // 移动端点击后关闭侧边栏
+                            if (window.innerWidth <= 768) {
+                                toggleMobileMenu();
+                            }
+                        } else {
+                            console.warn(`特效 ${effectName} 不在列表中`);
+                        }
+                    } else {
+                        console.warn('特效名称未定义');
+                    }
+                } catch (error) {
+                    console.error('点击特效失败:', error);
+                    Toast.error('点击特效失败');
                 }
             });
         });
 
         // 双击全屏
-        document.getElementById('canvas').addEventListener('dblclick', () => {
-            document.body.classList.toggle('fullscreen');
+        const canvas = document.getElementById('canvas');
+        if (canvas) {
+            canvas.addEventListener('dblclick', () => {
+                try {
+                    document.body.classList.toggle('fullscreen');
+                } catch (error) {
+                    console.error('切换全屏失败:', error);
+                    Toast.error('切换全屏失败');
+                }
+            });
+        }
+
+        // 窗口大小变化时更新状态
+        window.addEventListener('resize', () => {
+            // 移动端检测
+            const mobileMenuBtn = document.getElementById('mobile-menu-toggle');
+            if (mobileMenuBtn) {
+                mobileMenuBtn.style.display = window.innerWidth <= 768 ? 'block' : 'none';
+            }
         });
 
         // 初始化
-        window.addEventListener('DOMContentLoaded', initEngine);
+        window.addEventListener('DOMContentLoaded', () => {
+            initEngine();
+            initCollapsibleLists();
+            
+            // 初始化移动端菜单按钮状态
+            const mobileMenuBtn = document.getElementById('mobile-menu-toggle');
+            if (mobileMenuBtn) {
+                mobileMenuBtn.style.display = window.innerWidth <= 768 ? 'block' : 'none';
+            }
+        });
+
+        // 初始化可折叠列表
+        function initCollapsibleLists() {
+            const categoryHeaders = document.querySelectorAll('.effect-category h3');
+            categoryHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const category = header.parentElement;
+                    category.classList.toggle('collapsed');
+                });
+            });
+        }
     </script>
 </body>
 </html>
