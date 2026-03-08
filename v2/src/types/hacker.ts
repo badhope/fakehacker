@@ -16,6 +16,9 @@ export interface CommandConfig {
   logMessages: string[];
   effect?: string;
   duration?: number;
+  aliases?: string[];
+  requiresAuth?: boolean;
+  cooldown?: number;
 }
 
 // 数字命令配置

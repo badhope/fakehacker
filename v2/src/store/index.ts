@@ -3,7 +3,7 @@
  */
 
 import { create } from 'zustand';
-import type { IEffect, EffectParams } from '../types';
+import type { IEffect } from '../types';
 import type { 
   SystemState, 
   LogEntry, 
@@ -100,7 +100,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   boot: async () => {
     const { addLog } = get();
     
-    // 启动序列日志
     const bootLogs = [
       'Initializing system...',
       'Loading core modules...',
@@ -118,7 +117,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       system: { ...state.system, isBooted: true, uptime: 0 }
     }));
     
-    // 启动运行时间计数器
     setInterval(() => {
       set(state => ({
         system: { ...state.system, uptime: state.system.uptime + 1 }
@@ -162,7 +160,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     
     set(state => {
       const newLogs = [...state.logs, newLog];
-      // 限制日志数量
       if (newLogs.length > state.maxLogs) {
         newLogs.shift();
       }
@@ -186,7 +183,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         clickCount: current.clickCount + 1
       });
       
-      // 0.1 秒后恢复
       setTimeout(() => {
         set(state2 => {
           const buttons2 = new Map(state2.buttons);
@@ -213,32 +209,23 @@ export const useAppStore = create<AppState>((set, get) => ({
   // ===== 命令 Actions =====
   
   executeCommand: async (command) => {
-    const { addLog, pressButton } = get();
+    const { addLog } = get();
     
     set({ currentCommand: command, isExecuting: true });
     
     addLog(`Executing command: ${command.name} [${command.key}]`, 'info');
     
-    // 显示随机日志消息
     for (const msg of command.logMessages) {
       await new Promise(resolve => setTimeout(resolve, 500));
       addLog(msg, command.type === 'destructive' ? 'warning' : 'info');
-    }
-    
-    // 播放音效
-    if (get().system.audioEnabled) {
-      // TODO: 实现音效
     }
     
     set({ currentCommand: null, isExecuting: false });
   },
 
   executeNumberCommand: async (code) => {
-    const { addLog, executeCommand } = get();
-    
-    // 这里应该查找数字命令配置并执行序列
+    const { addLog } = get();
     addLog(`Advanced mode: Code ${code}`, 'system');
-    // TODO: 实现数字命令序列执行
   },
 
   // ===== 快速行动 Actions =====
