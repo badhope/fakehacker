@@ -1,9 +1,10 @@
 interface HeaderProps {
   onToggleSidebar?: () => void;
   showSidebar?: boolean;
+  isMobile?: boolean;
 }
 
-export function Header({ onToggleSidebar, showSidebar }: HeaderProps) {
+export function Header({ onToggleSidebar, showSidebar, isMobile }: HeaderProps) {
   return (
     <header className="absolute top-0 left-0 w-full p-3 md:p-5 z-[20] pointer-events-auto backdrop-blur-sm bg-gradient-to-b from-black/90 via-black/70 to-transparent">
       <div className="flex items-center justify-between">
@@ -11,7 +12,7 @@ export function Header({ onToggleSidebar, showSidebar }: HeaderProps) {
           {/* 移动端菜单按钮 */}
           <button
             onClick={onToggleSidebar}
-            className="md:hidden p-2 rounded border border-[var(--primary-cyan)] text-[var(--primary-cyan)] hover:bg-[rgba(0,255,255,0.1)] transition-colors"
+            className="md:hidden p-2 rounded border border-[var(--primary-cyan)] text-[var(--primary-cyan)] hover:bg-[rgba(0,255,255,0.1)] transition-colors active:scale-95"
             aria-label="Toggle sidebar"
           >
             <svg 
@@ -48,6 +49,7 @@ export function Header({ onToggleSidebar, showSidebar }: HeaderProps) {
           <div className="hidden md:flex items-center gap-4 text-xs text-[var(--text-muted)]">
             <span>按 <kbd className="px-1.5 py-0.5 rounded bg-[rgba(0,255,255,0.2)] text-[var(--primary-cyan)] border border-[rgba(0,255,255,0.3)]">A-Z</kbd> 执行命令</span>
             <span>按 <kbd className="px-1.5 py-0.5 rounded bg-[rgba(0,255,255,0.2)] text-[var(--primary-cyan)] border border-[rgba(0,255,255,0.3)]">F</kbd> 全屏</span>
+            <span>按 <kbd className="px-1.5 py-0.5 rounded bg-[rgba(0,255,255,0.2)] text-[var(--primary-cyan)] border border-[rgba(0,255,255,0.3)]">M</kbd> 菜单</span>
           </div>
         </div>
       </div>

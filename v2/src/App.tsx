@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { EffectEngine } from './core/EffectEngine';
 import { useAppStore } from './store';
 import { BootSequence } from './components/BootSequence';
@@ -17,6 +17,7 @@ function App() {
   const engineRef = useRef<EffectEngine | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   
   const { 
     system,
@@ -29,7 +30,8 @@ function App() {
     executeCommand,
     highlightButton,
     clearHighlight,
-    addLog
+    addLog,
+    addToast
   } = useAppStore();
 
   const { playSound } = useSound();
@@ -37,15 +39,23 @@ function App() {
   // 检测移动端
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-      if (window.innerWidth <= 768) {
+      const isMobileDevice = window.innerWidth <= 768 || 'ontouchstart' in window;
+      setIsMobile(isMobileDevice);
+      if (isMobileDevice) {
         setShowSidebar(false);
       }
     };
     
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    
+    // 模拟加载完成
+    const timer = setTimeout(() => setIsLoading(false), 500);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      clearTimeout(timer);
+    };
   }, []);
 
   // 初始化引擎
@@ -55,112 +65,144 @@ function App() {
     let isMounted = true;
     let engine: EffectEngine | null = null;
 
-    try {
-      engine = new EffectEngine(canvasRef.current);
-      engineRef.current = engine;
-      
-      const handleFPSUpdate = (e: Event) => {
-        const customEvent = e as CustomEvent<{ fps: number }>;
-        if (isMounted) {
-          setFPS(customEvent.detail.fps);
-        }
-      };
-      
-      canvasRef.current.addEventListener('fps-update', handleFPSUpdate);
-      
-      const handleEffectLoaded = (e: Event) => {
-        const customEvent = e as CustomEvent<{ name: string }>;
-        if (isMounted && engine) {
-          setCurrentEffect(customEvent.detail.name, engine.getCurrentEffectInstance());
-          addLog(`Effect loaded: ${customEvent.detail.name}`, 'success');
-        }
-      };
-      
-      canvasRef.current.addEventListener('effect-loaded', handleEffectLoaded);
-      
-      const handleEffectUnloaded = () => {
-        if (isMounted) {
-          setCurrentEffect(null, null);
-        }
-      };
-      
-      canvasRef.current.addEventListener('effect-unloaded', handleEffectUnloaded);
-      
-      const effects = engine.getAvailableEffects();
-      setAvailableEffects(effects);
-
-      return () => {
-        isMounted = false;
-        canvasRef.current?.removeEventListener('fps-update', handleFPSUpdate);
-        canvasRef.current?.removeEventListener('effect-loaded', handleEffectLoaded);
-        canvasRef.current?.removeEventListener('effect-unloaded', handleEffectUnloaded);
-        engine?.destroy();
-        engineRef.current = null;
-      };
-    } catch (error) {
-      console.error('初始化引擎失败:', error);
-      if (isMounted) {
-        addLog(`Engine initialization failed: ${error}`, 'error');
-      }
-    }
-  }, [system.isBooted]);
-
-  // 键盘快捷键
-  useEffect(() => {
-    if (!system.isBooted) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const key = e.key.toUpperCase();
-      
-      if (e.key === ' ' && (e.target as HTMLElement).tagName === 'INPUT') {
-        return;
-      }
-
-      if (key.length === 1 && key >= 'A' && key <= 'Z') {
-        if ((e.target as HTMLElement).id === 'advanced-input') return;
+    const initEngine = async () => {
+      try {
+        engine = new EffectEngine(canvasRef.current!);
+        engineRef.current = engine;
         
-        const command = letterCommands[key];
-        if (command) {
-          if (system.audioEnabled) {
-            playSound('key-press');
+        const handleFPSUpdate = (e: Event) => {
+          const customEvent = e as CustomEvent<{ fps: number }>;
+          if (isMounted) {
+            setFPS(customEvent.detail.fps);
           }
-          
-          highlightButton(key);
-          executeCommand(command);
-          
-          setTimeout(() => clearHighlight(), 200);
-        }
-      }
+        };
+        
+        const handleEffectLoaded = (e: Event) => {
+          const customEvent = e as CustomEvent<{ name: string }>;
+          if (isMounted && engine) {
+            setCurrentEffect(customEvent.detail.name, engine.getCurrentEffectInstance());
+            addLog(`Effect loaded: ${customEvent.detail.name}`, 'success');
+          }
+        };
+        
+        const handleEffectUnloaded = () => {
+          if (isMounted) {
+            setCurrentEffect(null, null);
+          }
+        };
+        
+        canvasRef.current!.addEventListener('fps-update', handleFPSUpdate);
+        canvasRef.current!.addEventListener('effect-loaded', handleEffectLoaded);
+        canvasRef.current!.addEventListener('effect-unloaded', handleEffectUnloaded);
+        
+        const effects = engine.getAvailableEffects();
+        setAvailableEffects(effects);
 
-      switch (e.key) {
-        case ' ':
-          e.preventDefault();
-          engineRef.current?.togglePause();
-          break;
-        case 'f':
-        case 'F':
-          if (!e.ctrlKey && !e.metaKey) {
-            document.body.classList.toggle('fullscreen');
-          }
-          break;
-        case 'Escape':
-          document.body.classList.remove('fullscreen');
-          if (isMobile) {
-            setShowSidebar(false);
-          }
-          break;
-        case 'Tab':
-          if (isMobile) {
-            e.preventDefault();
-            setShowSidebar(!showSidebar);
-          }
-          break;
+        return () => {
+          canvasRef.current?.removeEventListener('fps-update', handleFPSUpdate);
+          canvasRef.current?.removeEventListener('effect-loaded', handleEffectLoaded);
+          canvasRef.current?.removeEventListener('effect-unloaded', handleEffectUnloaded);
+        };
+      } catch (error) {
+        console.error('Engine initialization failed:', error);
+        if (isMounted) {
+          addLog(`Engine initialization failed: ${error}`, 'error');
+          addToast({ type: 'error', message: 'Failed to initialize graphics engine' });
+        }
       }
     };
 
+    const cleanup = initEngine();
+
+    return () => {
+      isMounted = false;
+      cleanup?.then?.((cleanupFn) => cleanupFn?.());
+      engine?.destroy();
+      engineRef.current = null;
+    };
+  }, [system.isBooted, setFPS, setCurrentEffect, setAvailableEffects, addLog, addToast]);
+
+  // 键盘快捷键处理
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    const key = e.key.toUpperCase();
+    
+    // 忽略输入框中的空格
+    if (e.key === ' ' && (e.target as HTMLElement).tagName === 'INPUT') {
+      return;
+    }
+
+    // A-Z 字母键处理
+    if (key.length === 1 && key >= 'A' && key <= 'Z') {
+      if ((e.target as HTMLElement).id === 'advanced-input') return;
+      
+      const command = letterCommands[key];
+      if (command) {
+        if (system.audioEnabled) {
+          playSound('key-press');
+        }
+        
+        highlightButton(key);
+        executeCommand(command);
+        
+        setTimeout(() => clearHighlight(), 200);
+      }
+    }
+
+    // 其他快捷键
+    switch (e.key) {
+      case ' ':
+        e.preventDefault();
+        engineRef.current?.togglePause();
+        break;
+      case 'f':
+      case 'F':
+        if (!e.ctrlKey && !e.metaKey) {
+          document.body.classList.toggle('fullscreen');
+        }
+        break;
+      case 'Escape':
+        document.body.classList.remove('fullscreen');
+        if (isMobile) {
+          setShowSidebar(false);
+        }
+        break;
+      case 'Tab':
+        if (isMobile) {
+          e.preventDefault();
+          setShowSidebar(!showSidebar);
+        }
+        break;
+      case 'm':
+      case 'M':
+        if (!e.ctrlKey && !e.metaKey && (e.target as HTMLElement).tagName !== 'INPUT') {
+          setShowSidebar(!showSidebar);
+        }
+        break;
+    }
+  }, [system.audioEnabled, playSound, executeCommand, highlightButton, clearHighlight, isMobile]);
+
+  useEffect(() => {
+    if (!system.isBooted) return;
+    
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [system.isBooted, system.audioEnabled, playSound, executeCommand, highlightButton, clearHighlight, isMobile, showSidebar]);
+  }, [system.isBooted, handleKeyDown]);
+
+  // 显示加载状态
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl text-[var(--primary-cyan)] animate-pulse mb-4">
+            LOADING...
+          </div>
+          <div className="w-48 h-1 bg-gray-800 rounded overflow-hidden">
+            <div className="h-full bg-[var(--primary-cyan)] animate-pulse" style={{ width: '60%' }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app w-full h-full overflow-hidden">
@@ -174,12 +216,16 @@ function App() {
       
       {system.isBooted && (
         <div className="ui-overlay relative w-full h-full pointer-events-none">
-          <Header onToggleSidebar={() => setShowSidebar(!showSidebar)} showSidebar={showSidebar} />
+          <Header 
+            onToggleSidebar={() => setShowSidebar(!showSidebar)} 
+            showSidebar={showSidebar}
+            isMobile={isMobile}
+          />
           
           {/* 移动端侧边栏遮罩 */}
           {isMobile && showSidebar && (
             <div 
-              className="fixed inset-0 bg-black/50 z-[25] pointer-events-auto"
+              className="fixed inset-0 bg-black/50 z-[25] pointer-events-auto backdrop-blur-sm"
               onClick={() => setShowSidebar(false)}
             />
           )}
@@ -193,6 +239,7 @@ function App() {
                 w-[350px] md:w-[350px] h-full pointer-events-auto overflow-y-auto 
                 bg-[rgba(5,5,16,0.95)] backdrop-blur-md border-r border-[rgba(0,255,255,0.3)]
                 transition-transform duration-300 ease-out
+                scrollbar-thin scrollbar-thumb-[var(--primary-cyan)] scrollbar-track-transparent
               `}
             >
               <div className="border-b border-[rgba(0,255,255,0.3)]">
