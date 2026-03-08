@@ -231,12 +231,12 @@ function App() {
           )}
           
           <div className="flex h-[calc(100%-120px)] mt-[80px]">
-            {/* 左侧面板 */}
+            {/* 左侧面板 - 移动端使用固定定位，桌面端使用普通布局 */}
             <div 
               className={`
-                ${isMobile ? 'fixed left-0 top-[80px] bottom-[40px] z-[30]' : ''}
+                ${isMobile ? 'fixed left-0 top-[80px] bottom-[40px] z-[30] w-full' : 'relative w-[350px]'}
                 ${isMobile && !showSidebar ? '-translate-x-full' : 'translate-x-0'}
-                w-[350px] md:w-[350px] h-full pointer-events-auto overflow-y-auto 
+                h-full pointer-events-auto overflow-y-auto 
                 bg-[rgba(5,5,16,0.95)] backdrop-blur-md border-r border-[rgba(0,255,255,0.3)]
                 transition-transform duration-300 ease-out
                 scrollbar-thin scrollbar-thumb-[var(--primary-cyan)] scrollbar-track-transparent
@@ -251,10 +251,17 @@ function App() {
               </div>
               
               <AdvancedMode />
+              
+              {/* 移动端也显示日志 */}
+              {isMobile && (
+                <div className="h-[300px] mt-4">
+                  <LogConsole />
+                </div>
+              )}
             </div>
             
-            {/* 右侧日志区域 */}
-            <div className="flex-1 p-2 md:p-4 pointer-events-auto h-full overflow-hidden">
+            {/* 右侧日志区域 - 移动端隐藏，桌面端显示 */}
+            <div className={`${isMobile ? 'hidden' : 'block'} flex-1 p-2 md:p-4 pointer-events-auto h-full overflow-hidden`}>
               <LogConsole />
             </div>
           </div>

@@ -41,8 +41,7 @@ export function LogConsole() {
       {/* 日志内容 */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto p-4 font-mono text-xs space-y-1"
-        style={{ maxHeight: '300px' }}
+        className="flex-1 overflow-y-auto p-2 md:p-4 font-mono text-xs md:text-sm space-y-1"
       >
         {logs.map(log => (
           <div

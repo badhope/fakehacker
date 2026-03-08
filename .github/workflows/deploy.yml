@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -37,6 +37,8 @@ jobs:
         run: |
           cd v2
           npm run build
+          # Copy favicon.ico to dist if it exists
+          if [ -f public/favicon.ico ]; then cp public/favicon.ico v2/dist/; fi
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
