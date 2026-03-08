@@ -31,6 +31,9 @@ interface AppState {
   // 快速行动
   quickActions: QuickAction[];
   
+  // Toast 通知
+  toasts: Array<{ id: string; type: 'success' | 'error' | 'warning' | 'info'; message: string; duration?: number }>;
+  
   // 原有特效相关
   currentEffect: string | null;
   currentEffectInstance: IEffect | null;
@@ -61,6 +64,10 @@ interface AppState {
   registerQuickAction: (action: QuickAction) => void;
   triggerQuickAction: (id: string) => void;
   
+  // Actions - Toast
+  addToast: (toast: Omit<{ id: string; type: 'success' | 'error' | 'warning' | 'info'; message: string; duration?: number }, 'id'>) => void;
+  removeToast: (id: string) => void;
+  
   // 原有特效 Actions
   setCurrentEffect: (name: string | null, instance?: IEffect | null) => void;
   setAvailableEffects: (effects: string[]) => void;
@@ -89,6 +96,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   currentCommand: null,
   isExecuting: false,
   quickActions: [],
+  toasts: [],
   currentEffect: null,
   currentEffectInstance: null,
   availableEffects: [],
@@ -241,6 +249,31 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (action) {
       action.action();
     }
+  },
+
+  // ===== Toast Actions =====
+  
+  addToast: (toast) => {
+    const id = Math.random().toString(36).substr(2, 9);
+    const newToast = { 
+      ...toast, 
+      id,
+      duration: toast.duration ?? 3000
+    };
+    
+    set(state => ({
+      toasts: [...state.toasts, newToast]
+    }));
+
+    setTimeout(() => {
+      get().removeToast(id);
+    }, newToast.duration);
+  },
+
+  removeToast: (id) => {
+    set(state => ({
+      toasts: state.toasts.filter(t => t.id !== id)
+    }));
   },
 
   // ===== 原有特效 Actions =====
