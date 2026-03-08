@@ -38,12 +38,19 @@
   --z-control-panel: 30;
   --z-modal: 100;
   --z-toast: 1000;
+  
+  /* 响应式断点 */
+  --sidebar-width: 350px;
+  --sidebar-width-mobile: 100%;
+  --button-size: 60px;
+  --button-size-mobile: 50px;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
@@ -53,6 +60,7 @@ html, body {
   background: var(--bg-dark);
   color: var(--text-primary);
   font-family: 'Courier New', monospace;
+  touch-action: manipulation;
 }
 
 #root {
@@ -115,37 +123,109 @@ html, body {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 @keyframes slideInLeft {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
 @keyframes slideInRight {
-  from {
-    transform: translateX(100%);
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* 触摸反馈 */
+.touch-feedback {
+  transition: transform 0.1s var(--ease-out-quad);
+}
+
+.touch-feedback:active {
+  transform: scale(0.95);
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 100%;
+    --button-size: 50px;
   }
-  to {
-    transform: translateX(0);
+  
+  /* 隐藏桌面端特定元素 */
+  .desktop-only {
+    display: none !important;
+  }
+  
+  /* 移动端字体调整 */
+  body {
+    font-size: 14px;
+  }
+  
+  /* 移动端滚动优化 */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* 平板端优化 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  :root {
+    --sidebar-width: 300px;
+    --button-size: 55px;
+  }
+}
+
+/* 桌面端优化 */
+@media (min-width: 1025px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* 全屏模式 */
+body.fullscreen {
+  overflow: hidden;
+}
+
+body.fullscreen .ui-overlay {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .letter-btn {
+    padding: 12px;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  :root {
+    --primary-cyan: #00ffff;
+    --primary-green: #00ff00;
+    --text-primary: #ffffff;
+    --text-secondary: #ffffff;
+  }
+}
+
+/* 减少动画模式 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
