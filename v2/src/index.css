@@ -1,0 +1,151 @@
+@import 'tailwindcss';
+
+/* 主题变量系统 */
+:root {
+  /* 主色调 */
+  --primary-cyan: #00ffff;
+  --primary-green: #00ff00;
+  --primary-blue: #0088ff;
+  
+  /* 强调色 */
+  --accent-purple: #ff00ff;
+  --accent-orange: #ff8800;
+  --accent-red: #ff0044;
+  
+  /* 中性色 */
+  --bg-dark: #0a0a1e;
+  --bg-darker: #050510;
+  --bg-panel: rgba(10, 10, 30, 0.95);
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-muted: #666666;
+  
+  /* 功能色 */
+  --success: #00ff88;
+  --warning: #ffcc00;
+  --error: #ff4466;
+  --info: #00ffff;
+  
+  /* 缓动函数 */
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out-quad: cubic-bezier(0.45, 0, 0.55, 1);
+  --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  /* 层级系统 */
+  --z-canvas: 0;
+  --z-ui-overlay: 10;
+  --z-header: 20;
+  --z-control-panel: 30;
+  --z-modal: 100;
+  --z-toast: 1000;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: 'Courier New', monospace;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-cyan);
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00ccff;
+}
+
+/* FPS 计数器颜色编码 */
+.fps-good {
+  color: var(--primary-green);
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+.fps-warning {
+  color: var(--warning);
+  text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+}
+
+.fps-bad {
+  color: var(--error);
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+/* 动画类 */
+.fade-in {
+  animation: fadeIn 0.3s var(--ease-out-quad);
+}
+
+.fade-out {
+  animation: fadeOut 0.3s var(--ease-out-quad);
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.3s var(--ease-out-expo);
+}
+
+.slide-in-right {
+  animation: slideInRight 0.3s var(--ease-out-expo);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
