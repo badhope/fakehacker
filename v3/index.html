@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Effects Lab - 简单版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* 控制面板 */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 20px;
+            color: #00ffff;
+            min-width: 250px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .controls h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            text-align: center;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .control-group select,
+        .control-group input[type="range"] {
+            width: 100%;
+            padding: 8px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #00ffff;
+            border-radius: 5px;
+            color: #00ffff;
+            font-family: inherit;
+        }
+
+        .control-group select:focus,
+        .control-group input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(0, 255, 255, 0.2);
+            border: 1px solid #00ffff;
+            border-radius: 5px;
+            color: #00ffff;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: rgba(0, 255, 255, 0.4);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* FPS 计数器 */
+        .fps-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 15px;
+            color: #00ff00;
+            font-size: 18px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+
+        /* 信息面板 */
+        .info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #0088ff;
+            border-radius: 10px;
+            padding: 15px;
+            color: #0088ff;
+            font-size: 12px;
+            max-width: 300px;
+            box-shadow: 0 0 20px rgba(0, 136, 255, 0.5);
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .controls {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                min-width: auto;
+                padding: 15px;
+            }
+
+            .fps-counter {
+                top: 10px;
+                right: 10px;
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            .info {
+                bottom: 10px;
+                left: 10px;
+                right: 10px;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Canvas -->
+    <canvas id="canvas"></canvas>
+
+    <!-- 控制面板 -->
+    <div class="controls">
+        <h2>🎨 特效控制</h2>
+        
+        <div class="control-group">
+            <label for="effect-select">选择特效:</label>
+            <select id="effect-select">
+                <option value="particles">粒子流动</option>
+                <option value="waves">波浪效果</option>
+                <option value="stars">星空闪烁</option>
+                <option value="matrix">矩阵雨</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="speed-range">速度：<span id="speed-value">50</span>%</label>
+            <input type="range" id="speed-range" min="1" max="100" value="50">
+        </div>
+
+        <div class="control-group">
+            <label for="count-range">数量：<span id="count-value">100</span></label>
+            <input type="range" id="count-range" min="10" max="500" value="100">
+        </div>
+
+        <button class="btn" id="pause-btn">⏸️ 暂停</button>
+        <button class="btn" id="reset-btn">🔄 重置</button>
+        <button class="btn" id="fullscreen-btn">📺 全屏</button>
+    </div>
+
+    <!-- FPS 计数器 -->
+    <div class="fps-counter">
+        FPS: <span id="fps">60</span>
+    </div>
+
+    <!-- 信息面板 -->
+    <div class="info">
+        <strong>📖 操作说明:</strong><br>
+        • 拖动滑块调整参数<br>
+        • 点击按钮控制效果<br>
+        • 空格键：暂停/继续<br>
+        • F 键：全屏切换<br>
+        • 双击 Canvas: 切换特效
+    </div>
+
+    <script>
+        // ==================== 基础设置 ====================
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // 设置 Canvas 尺寸
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // ==================== 状态管理 ====================
+        const state = {
+            currentEffect: 'particles',
+            speed: 0.5,
+            count: 100,
+            paused: false,
+            fps: 60,
+            lastTime: performance.now(),
+            frameCount: 0
+        };
+
+        // ==================== 粒子类 ====================
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 2 * state.speed;
+                this.vy = (Math.random() - 0.5) * 2 * state.speed;
+                this.radius = Math.random() * 3 + 1;
+                this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                this.life = 1;
+                this.decay = Math.random() * 0.01 + 0.005;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+
+                // 边界检测
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+                // 生命重置
+                if (this.life <= 0) {
+                    this.reset();
+                    this.life = 1;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.life;
+                ctx.fill();
+            }
+        }
+
+        // ==================== 波浪类 ====================
+        class Wave {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = 0;
+                this.y = canvas.height / 2;
+                this.amplitude = Math.random() * 50 + 50;
+                this.frequency = Math.random() * 0.02 + 0.01;
+                this.phase = Math.random() * Math.PI * 2;
+                this.speed = state.speed * 0.1;
+                this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                this.width = 2;
+            }
+
+            update(time) {
+                this.phase += this.speed;
+            }
+
+            draw(time) {
+                ctx.beginPath();
+                ctx.moveTo(0, this.y);
+
+                for (let x = 0; x < canvas.width; x++) {
+                    const y = this.y + Math.sin(x * this.frequency + this.phase + time * 0.001) * this.amplitude;
+                    ctx.lineTo(x, y);
+                }
+
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = this.width;
+                ctx.stroke();
+            }
+        }
+
+        // ==================== 星星类 ====================
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.z = Math.random() * 2 + 0.5;
+                this.size = Math.random() * 2;
+                this.blinkSpeed = Math.random() * 0.05 + 0.02;
+                this.alpha = Math.random();
+                this.blinkDir = 1;
+            }
+
+            update() {
+                this.alpha += this.blinkSpeed * this.blinkDir;
+                if (this.alpha >= 1 || this.alpha <= 0.2) {
+                    this.blinkDir *= -1;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * this.z, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                ctx.fill();
+            }
+        }
+
+        // ==================== 矩阵字符类 ====================
+        class MatrixChar {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.char = this.randomChar();
+                this.speed = Math.random() * 3 + 2;
+                this.color = '#0f0';
+            }
+
+            randomChar() {
+                const chars = '0123456789ABCDEFﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ';
+                return chars[Math.floor(Math.random() * chars.length)];
+            }
+
+            update() {
+                this.y += this.speed * state.speed;
+                if (this.y > canvas.height) {
+                    this.y = -20;
+                    this.x = Math.random() * canvas.width;
+                }
+                this.char = this.randomChar();
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.font = '16px monospace';
+                ctx.fillText(this.char, this.x, this.y);
+            }
+        }
+
+        // ==================== 特效管理 ====================
+        let particles = [];
+        let waves = [];
+        let stars = [];
+        let matrixChars = [];
+
+        function initEffects() {
+            // 初始化粒子
+            particles = [];
+            for (let i = 0; i < state.count; i++) {
+                particles.push(new Particle());
+            }
+
+            // 初始化波浪
+            waves = [];
+            for (let i = 0; i < 5; i++) {
+                waves.push(new Wave());
+            }
+
+            // 初始化星星
+            stars = [];
+            for (let i = 0; i < 200; i++) {
+                stars.push(new Star());
+            }
+
+            // 初始化矩阵字符
+            matrixChars = [];
+            const columns = Math.floor(canvas.width / 20);
+            for (let i = 0; i < columns; i++) {
+                matrixChars.push(new MatrixChar(i * 20, Math.random() * canvas.height));
+            }
+        }
+
+        function updateEffects() {
+            particles.forEach(p => p.update());
+            waves.forEach(w => w.update());
+            stars.forEach(s => s.update());
+            matrixChars.forEach(m => m.update());
+        }
+
+        function drawEffects(time) {
+            // 清空画布（带拖尾效果）
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            switch (state.currentEffect) {
+                case 'particles':
+                    particles.forEach(p => p.draw());
+                    break;
+                case 'waves':
+                    waves.forEach(w => w.draw(time));
+                    break;
+                case 'stars':
+                    stars.forEach(s => s.draw());
+                    break;
+                case 'matrix':
+                    matrixChars.forEach(m => m.draw());
+                    break;
+            }
+        }
+
+        // ==================== 动画循环 ====================
+        let animationId;
+
+        function animate() {
+            if (!state.paused) {
+                const time = performance.now();
+                
+                // FPS 计算
+                state.frameCount++;
+                if (time - state.lastTime >= 1000) {
+                    state.fps = state.frameCount;
+                    state.frameCount = 0;
+                    state.lastTime = time;
+                    document.getElementById('fps').textContent = state.fps;
+                }
+
+                updateEffects();
+                drawEffects(time);
+            }
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // ==================== 事件监听 ====================
+        
+        // 特效选择
+        document.getElementById('effect-select').addEventListener('change', (e) => {
+            state.currentEffect = e.target.value;
+            // 清空画布
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+
+        // 速度控制
+        document.getElementById('speed-range').addEventListener('input', (e) => {
+            state.speed = e.target.value / 100;
+            document.getElementById('speed-value').textContent = e.target.value;
+        });
+
+        // 数量控制
+        document.getElementById('count-range').addEventListener('input', (e) => {
+            state.count = parseInt(e.target.value);
+            document.getElementById('count-value').textContent = e.target.value;
+            initEffects();
+        });
+
+        // 暂停按钮
+        document.getElementById('pause-btn').addEventListener('click', () => {
+            state.paused = !state.paused;
+            document.getElementById('pause-btn').textContent = state.paused ? '▶️ 继续' : '⏸️ 暂停';
+        });
+
+        // 重置按钮
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            initEffects();
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+
+        // 全屏按钮
+        document.getElementById('fullscreen-btn').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                state.paused = !state.paused;
+                document.getElementById('pause-btn').textContent = state.paused ? '▶️ 继续' : '⏸️ 暂停';
+            }
+            if (e.code === 'KeyF') {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+        });
+
+        // 双击切换特效
+        canvas.addEventListener('dblclick', () => {
+            const effects = ['particles', 'waves', 'stars', 'matrix'];
+            const currentIndex = effects.indexOf(state.currentEffect);
+            const nextIndex = (currentIndex + 1) % effects.length;
+            state.currentEffect = effects[nextIndex];
+            document.getElementById('effect-select').value = state.currentEffect;
+            
+            // 清空画布
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+
+        // ==================== 初始化 ====================
+        initEffects();
+        animate();
+
+        // 欢迎信息
+        console.log('%c🎨 Visual Effects Lab - 简单版', 'color: #00ffff; font-size: 20px; font-weight: bold;');
+        console.log('%c按空格暂停，F 全屏，双击切换特效', 'color: #00ff00; font-size: 14px;');
+    </script>
+</body>
+</html>
